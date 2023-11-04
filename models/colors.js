@@ -4,8 +4,8 @@ const {
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class Colors extends Model {
-        static associate({Productcolor}) {
-            this.hasMany(Productcolor,{as:"color_products",foreignKey:"colorId"})
+        static associate({}) {
+            this.hasMany
         }
     }
     Colors.init({

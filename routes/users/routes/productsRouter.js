@@ -11,7 +11,8 @@ const {
     getTopProducts,
     getBrandProducts,
     getCategoryProducts,
-    getSubcategoryProducts
+    getSubcategoryProducts,
+    addReminder
 } = require('../../../controllers/users/productsControllers');
 router.get("/", getProducts)
 router.get("/top", getTopProducts)
@@ -24,6 +25,7 @@ router.get("/brands/:id", getBrandProducts)
 router.get("/categories/:id", getCategoryProducts)
 router.get("/sub-categories/:id", getSubcategoryProducts)
 router.get("/:id", getOneProduct)
+router.post("/reminder",addReminder)
 
 
 module.exports = router

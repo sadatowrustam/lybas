@@ -151,7 +151,6 @@ exports.addSize = catchAsync(async(req, res, next) => {
             data.price_old = req.body.sizes[i].price
             req.body.sizes[i].price = (data.price_old / 100) * (100 - req.body.sizes[i].discount)
         }
-        
         data.price = req.body.sizes[i].price
         data.sizeId = req.body.sizes[i].sizeId
         data.discount=req.body.sizes[i].discount
@@ -162,77 +161,12 @@ exports.addSize = catchAsync(async(req, res, next) => {
     }
     return res.status(201).send(sizes)
 })
-exports.addSizeToColor = catchAsync(async(req, res, next) => {
-    const id=req.params.id
-     const product_color = await Productcolor.findOne({ where: { id } })
-    if(!product_color) return next (new AppError("Product color not found",404))
-    await Productsizes.destroy({ where: { productColorId: product_color.id } })
-    var sizes = []
-    // const product = await Products.findOne({ where: { id: req.body.product_id } })
-    // if (!product) return next(new AppError("Product with that id not found", 404))
-    for (let i = 0; i < req.body.sizes.length; i++) {
-        let data = {}
-        data.price = req.body.sizes[i].price
-        data.price_old = null
-        if (req.body.sizes[i].discount > 0) {
-            data.price_old = req.body.sizes[i].price
-            data.discount = req.body.sizes[i].discount
-            data.price = (data.price_old / 100) * (100 - data.discount)
-        }
-
-        data.productColorId = product_color.id
-        data.sizeId = req.body.sizes[i].sizeId
-        data.productId = product_color.productId
-        data.stock=req.body.sizes[i].stock
-        data.discount=req.body.sizes[i].discount
-        let product_size = await Productsizes.create(data)
-        sizes.push(product_size)
-        data.productsizeId = product_size.id
-        data.quantity = req.body.sizes[i].quantity
-    }
-    return res.status(201).send(sizes)
-})
-exports.editSize = catchAsync(async(req, res, next) => {
-    let product_size = await Productsizes.findOne({ where: { product_size_id: req.params.id } })
-    if (!product_size) return next(new AppError("Product size not found with that id", 404))
-    let data = {}
-    data.price_old=null
-    if (req.body.discount) {
-        data.price_old = req.body.price
-        data.price = (color_size_data.price_usd_old / 100) * (100-req.body.discount)
-    }
-    console.log(data)
-    data.productId = product_size.productId
-    data.size = req.body.size
-    data.quantity = req.body.quantity
-    let stock = await Stock.findOne({ where: { productsizeId: product_size.id } })
-    if (!stock) return next(new AppError("Stock with that id not found", 404))
-    await stock.update(data)
-    await product_size.update(data)
-    return res.status(201).send(product_size)
-})
 exports.addProduct = catchAsync(async(req, res, next) => {
     const category = await Categories.findOne({
         where: { category_id: req.body.category_id },
     });
     if (!category)
         return next(new AppError('Category did not found with that ID', 404));
-    if (req.body.subcategory_id) {
-        const subcategory = await Subcategories.findOne({
-            where: { subcategory_id: [req.body.subcategory_id] },
-        });
-        if (!subcategory)
-            return next(new AppError('Sub-category did not found with that ID', 404));
-        req.body.subcategoryId = subcategory.id;
-    }
-    if (req.body.brand_id) {
-        const brand = await Brands.findOne({
-            where: { brand_id: req.body.brand_id }
-        })
-        if (!brand)
-            return next(new AppError("Brand did not found with that Id"), 404)
-        req.body.brandId = brand.id
-    }
     const date = new Date()
     req.body.is_new_expire = date.getTime()
     req.body.stock = Number(req.body.stock)
@@ -243,12 +177,6 @@ exports.addProduct = catchAsync(async(req, res, next) => {
         req.body.price =(req.body.price / 100) *(100 - req.body.discount);
     }
     const newProduct = await Products.create(req.body);
-    let stock_data = {}
-    if (req.body.quantity) {
-        stock_data.quantity = req.body.quantity
-        stock_data.productId = newProduct.id
-        await Stock.create(stock_data)
-    }
     return res.status(201).send(newProduct)
 })
 exports.editProduct = catchAsync(async(req, res, next) => {
@@ -262,7 +190,6 @@ exports.editProduct = catchAsync(async(req, res, next) => {
         req.body.price_old = req.body.price;
         req.body.price =(req.body.price_old / 100) *(100 - req.body.discount);
     }
-    console.log(req.body)
     await product.update(req.body);
     return res.status(200).send(product);
 });
@@ -284,10 +211,8 @@ exports.deleteProduct = catchAsync(async(req, res, next) => {
     const id = req.params.id;
     const product = await Products.findOne({
         where: { id },
-        include: [{
-                model: Productcolor,
-                as: "product_colors"
-            },
+        include: [
+
             {
                 model: Productsizes,
                 as: "product_sizes"
@@ -297,7 +222,6 @@ exports.deleteProduct = catchAsync(async(req, res, next) => {
     if (!product)
         return next(new AppError('Product did not found with that ID', 404));
     if (!product) return next(new AppError("Product with that id not found", 404))
-    if (product.product_colors) await Productcolor.destroy({where:{productId:product.id}})
     if (product.product_sizes) await Productsizes.destroy({where:{productId:product.id}})
 
     const images = await Images.findAll({ where: { productId: product.id } })
@@ -311,14 +235,6 @@ exports.deleteProduct = catchAsync(async(req, res, next) => {
     await product.destroy();
     return res.status(200).send('Successfully Deleted');
 });
-exports.deleteProductColor = catchAsync(async(req, res, next) => {
-    const product_color = await Productcolor.findOne({ id: req.params.id })
-    if (!product_color) return next(new AppError("Product color not found with that id", 404))
-    await Productsizes.destroy({ where: { productColorId: product_color.id } })
-    await Images.destroy({ where: { productcolorId: product_color.id } })
-    await product_color.destroy()
-    return res.status(200).send({ msg: "Sucess" })
-})
 exports.uploadProductImage = catchAsync(async(req, res, next) => {
     const id = req.params.id;
     const updateProduct = await Products.findOne({ where: { id } });
@@ -339,62 +255,9 @@ exports.uploadProductImage = catchAsync(async(req, res, next) => {
     return res.status(201).send(imagesArray);
 });
 
-exports.uploadProductImagebyColor = catchAsync(async(req, res, next) => {
-    const id = req.params.id;
-    const updateProductColor = await Productcolor.findOne({
-        where: { id },
-        include: {
-            model: Products,
-            as: "main_product"
-        }
-    });
-    let product_id = updateProductColor.main_product.id
-    let imagesArray = []
-    req.files = Object.values(req.files)
-    req.files = intoArray(req.files)
-    if (!updateProductColor)
-        return next(new AppError('Product did not found with that ID', 404));
-    for (const images of req.files) {
-        const image_id = v4()
-        const image = `${image_id}_product.webp`;
-        const photo = images.data
-        let buffer = await sharp(photo).webp().toBuffer()
-        await sharp(buffer).toFile(`static/${image}`);
-        let newImage = await Images.create({ image, id:image_id, productId: product_id, productcolorId: updateProductColor.id })
-        imagesArray.push(newImage)
-    }
-    return res.status(201).send(imagesArray);
-});
-exports.uploadDetails = catchAsync(async(req, res, next) => {
-    const product = await Products.findOne({ where: { product_id: req.params.id } })
-    if (!product) return next(new AppError("Product not found with that id", 404))
-    let detailsArray = []
-    req.files = Object.values(req.files)
-    req.files = intoArray(req.files)
-    for (const images of req.files) {
-        const detail_id = v4()
-        const image = `${detail_id}_detail.webp`;
-        const photo = images.data
-        let buffer = await sharp(photo).webp().toBuffer()
-        await sharp(buffer).toFile(`static/${image}`);
-        let newImage = await Details.create({ image, detail_id, productId: product.id })
-        detailsArray.push(newImage)
-    }
-    return res.status(201).send(detailsArray);
-})
 
 exports.deleteProductImage = catchAsync(async(req, res, next) => {
     const image = await Images.findOne({ where: { id: req.params.id } })
-
-    fs.unlink(`static/${image.image}`, function(err) {
-        if (err) throw err;
-    })
-    await image.destroy()
-    return res.status(200).send({ msg: "Sucess" })
-
-})
-exports.deleteDetailImage = catchAsync(async(req, res, next) => {
-    const image = await Details.findOne({ where: { detail_id: req.params.id } })
 
     fs.unlink(`static/${image.image}`, function(err) {
         if (err) throw err;

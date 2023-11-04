@@ -23,7 +23,7 @@ exports.isActive = catchAsync(async(req, res, next) => {
 exports.allSellers = catchAsync(async(req, res, next) => {
     let limit = req.query.limit || 20
     const offset = req.query.offset || 0
-    let seller = await Seller.findAll({
+    let data = await Seller.findAll({
         limit,
         offset,
         order: [
@@ -31,7 +31,7 @@ exports.allSellers = catchAsync(async(req, res, next) => {
         ]
     })
     let count = await Seller.count()
-    return res.send({ seller, count })
+    return res.send({ data, count })
 })
 exports.oneSeller = catchAsync(async(req, res, next) => {
     let id = req.params.id
@@ -94,4 +94,27 @@ exports.deleteSeller = catchAsync(async(req, res, next) => {
         await product.destroy();
     }
 
+})
+exports.getStats=catchAsync(async(req, res, next) =>{
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 1);
+
+    const endDate = new Date();
+    const secondDate=endDate()
+    secondDate.setMonth(endDate.getMonth() -2 );
+    const data = await Orders.findAll({
+        where: {
+            createdAt: {
+            between: [startDate, endDate]
+            }
+        }
+    });
+    const data2 = await Orders.findAll({
+        where: {
+            createdAt: {
+            between: [secondDate, startDate]
+            }
+        }
+    });
+    return res.send({data,data2})
 })

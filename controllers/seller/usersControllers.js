@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const AppError = require('../../utils/appError');
 const catchAsync = require('../../utils/catchAsync');
-const { Seller,Products } = require('../../models');
+const { Seller,Products,Sellercategory } = require('../../models');
 const { createSendToken } = require('./../../utils/createSendToken');
 const sharp = require('sharp');
 exports.getMe = catchAsync(async(req, res, next) => {
@@ -39,7 +39,7 @@ exports.updateMyPassword = catchAsync(async(req, res, next) => {
 });
 
 exports.updateMe = catchAsync(async(req, res, next) => {
-    const { name_tm,name_ru, address,email } = req.body;
+    const { name_tm,name_ru, address,email,newCategory } = req.body;
     if (!name_tm ||!name_ru || !address)
         return next(new AppError('Invalid credentials', 400));
 
@@ -52,7 +52,11 @@ exports.updateMe = catchAsync(async(req, res, next) => {
         address,
         email
     });
-
+    if(newCategory.length!=0){
+        for(const oneCategory of newCategory){
+            await Sellercategory.create({categoryId: oneCategory.id,sellerId:seller.id})
+        }
+    }
     createSendToken(seller, 200, res);
 });
 

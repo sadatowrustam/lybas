@@ -1,4 +1,4 @@
-const express = require('express')
+  const express = require('express')
 const router = express.Router()
 const { login, protect } = require("../../controllers/seller/sellersControllers")
 router.post("/login", login)

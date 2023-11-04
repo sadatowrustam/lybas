@@ -13,13 +13,7 @@ module.exports = {
             phone_number: {
                 type: DataTypes.STRING
             },
-            name_tm: {
-                type: DataTypes.STRING
-            },
-            name_ru: {
-                type: DataTypes.STRING
-            },
-            name_en: {
+            name: {
                 type: DataTypes.STRING
             },
             image: {
@@ -41,6 +35,9 @@ module.exports = {
                 type: DataTypes.BOOLEAN
             },
             email:{
+                type:DataTypes.STRING
+            },
+            welayat:{
                 type:DataTypes.STRING
             },
             createdAt: {

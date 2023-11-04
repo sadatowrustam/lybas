@@ -8,10 +8,9 @@ const {
     Productsizes,
     Images,
     Details,
-    Users,
     Likedproducts,
     Subcategories,
-    Orderproducts
+    Instock
 } = require('../../models');
 const catchAsync = require('../../utils/catchAsync');
 const AppError = require('../../utils/appError');
@@ -555,6 +554,10 @@ exports.getSubcategoryProducts = catchAsync(async(req, res, next) => {
     products = await isLiked(products, req)
     return res.status(200).send({ products, count, subcategory });
 });
+exports.addReminder=catchAsync(async(req,res,next)=>{
+    const data=await Instock.create(req.body)
+    return res.status(200).send(data)
+})
 async function isLiked(products, req) {
     for (let i = 0; i < products.length; i++) {
         const liked_ids = await Likedproducts.findOne({

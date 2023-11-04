@@ -4,7 +4,7 @@ const catchAsync = require('../../utils/catchAsync');
 exports.getAllSizes = catchAsync(async(req, res, next) => {
     const limit=req.query.limit || 20
     const offset=req.query.offset ||0
-    const sizes = await Sizes.findAll({
+    const data = await Sizes.findAll({
         limit,
         offset,
         order: [
@@ -12,5 +12,5 @@ exports.getAllSizes = catchAsync(async(req, res, next) => {
         ]
     })
     const count=await Sizes.count()
-    return res.status(201).send({sizes,count})
+    return res.status(201).send({data,count})
 })

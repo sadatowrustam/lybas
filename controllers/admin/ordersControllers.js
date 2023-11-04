@@ -7,6 +7,7 @@ const {
     Orders,
     Orderproducts,
     Stock,
+    Dayincome
 } = require('../../models');
 
 exports.getAllOrders = catchAsync(async(req, res, next) => {
@@ -173,6 +174,29 @@ exports.deleteOrder=catchAsync(async(req, res, next) => {
     await order.destroy()
     return res.send("sucess")
 });
+exports.getStats=catchAsync(async(req, res, next) =>{
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 1);
+
+    const endDate = new Date();
+    const secondDate=endDate()
+    secondDate.setMonth(endDate.getMonth() -2 );
+    const data = await Orders.findAll({
+        where: {
+            createdAt: {
+            between: [startDate, endDate]
+            }
+        }
+    });
+    const data2 = await Orders.findAll({
+        where: {
+            createdAt: {
+            between: [secondDate, startDate]
+            }
+        }
+    });
+    return res.send({data,data2})
+})
 const capitalize = function(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 };

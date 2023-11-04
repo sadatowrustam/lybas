@@ -5,8 +5,7 @@ const {
 module.exports = (sequelize, DataTypes) => {
     class Productsizes extends Model {
 
-        static associate({ Products,Productcolor,Sizes }) {
-            this.belongsTo(Productcolor, { as: "product_color", foreignKey: "productColorId" })
+        static associate({ Products, Sizes }) {
             this.belongsTo(Products, { as: "main_product", foreignKey: "productId" })
             this.belongsTo(Sizes,{as:"size",foreignKey:"sizeId"})
         }

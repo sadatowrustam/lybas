@@ -2,7 +2,8 @@ const { Op } = require('sequelize');
 const {
     Products,
     Images,
-    Seller
+    Seller,
+    Categories
 } = require('../../models');
 const catchAsync = require('../../utils/catchAsync');
 const AppError = require('../../utils/appError');
@@ -28,10 +29,10 @@ exports.getAll = catchAsync(async(req, res, next) => {
     return res.status(200).send({ sellers })
 })
 exports.sellerProduct = catchAsync(async(req, res, next) => {
-    let seller_id = req.params.id
-    const seller = await Seller.findOne({ where: { seller_id } })
+    let id = req.params.id
+    const seller = await Seller.findOne({ where: { id },include:{model:Categories,attributes:[]} })
     if (!seller) {
-        return next(new AppError(`Seller with id ${seller_id} not found`))
+        return next(new AppError(`Seller with id ${id} not found`))
     }
     const product = await Products.findAndCountAll({
         where: { sellerId: seller.id, isActive: true },
