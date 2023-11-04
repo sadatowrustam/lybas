@@ -3,16 +3,16 @@ const sharp = require("sharp")
 const AppError = require('../../utils/appError');
 const catchAsync = require('../../utils/catchAsync');
 const {
-    Materials
+    Material
 } = require('../../models');
 
 exports.addMaterial = catchAsync(async(req, res) => {
-    const newMaterial = await Materials.create(req.body);
+    const newMaterial = await Material.create(req.body);
     return res.status(201).send(newMaterial);
 });
 
 exports.editMaterial = catchAsync(async(req, res, next) => {
-    const material = await Materials.findOne({
+    const material = await Material.findOne({
         where: { id: req.params.id },
     });
 
@@ -35,10 +35,7 @@ exports.editMaterial = catchAsync(async(req, res, next) => {
 
 exports.deleteMaterial = catchAsync(async(req, res, next) => {
     const id = req.params.id;
-    const material = await Materials.findOne({ where: { id } });
-
-
-
+    const material = await Material.findOne({ where: { id } });
     if (!material)
         return next(new AppError('Category did not found with that ID', 404));
     await material.destroy();
@@ -47,7 +44,7 @@ exports.deleteMaterial = catchAsync(async(req, res, next) => {
 });
 exports.getOneMaterial = catchAsync(async(req, res, next) => {
     let { id } = req.params
-    const material = await Materials.findOne({
+    const material = await Material.findOne({
         where: { id },
     });
     if (!material) {

@@ -127,17 +127,6 @@ exports.getOneProduct = catchAsync(async(req, res, next) => {
     })
     return res.send(oneProduct)
 })
-exports.addColor = catchAsync(async(req, res, next) => {
-    const product = await Products.findOne({ where: { id: req.params.id } })
-    const product_color = await Productcolor.create({productId:product.id,colorId:req.body.colorId })
-    return res.status(201).send({ product_color });
-});
-exports.editColor = catchAsync(async(req, res, next) => {
-    const product_color = await Productcolor.findOne({ where: { product_color_id: req.params.id } })
-    if (!product_color) return next(new AppError("Product color not found with that id", 404))
-    await product_color.update({ name_tm: req.body.name_tm, name_ru: req.body.name_ru })
-    return res.status(201).send({ product_color });
-});
 exports.addSize = catchAsync(async(req, res, next) => {
     var sizes = []
     const product = await Products.findOne({ where: { id: req.params.id } })

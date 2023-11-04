@@ -13,6 +13,6 @@ router.get('/', getAllMaterials);
 router.get("/:id", getOneMaterial)
 router.post('/add', addMaterial);
 router.patch('/:id', editMaterial);
-router.delete('/delete/:id', deleteMaterial);
+router.post('/delete/:id', deleteMaterial);
 
 module.exports = router;

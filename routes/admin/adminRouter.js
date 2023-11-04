@@ -10,7 +10,7 @@ router.use("/banners", require("./routes/bannersRouter")) //test edildi
 router.use("/colors",protect,require("./routes/colorRouter"))
 router.use("/sizes",require("./routes/sizesRouter"))
 router.use('/categories', require('./routes/categoriesRouter')); //delete test etmeli
-router.use("/subcategories", require("./routes/subcategoriesRouter")) //test edildi
+// router.use("/subcategories", require("./routes/subcategoriesRouter")) //test edildi
 router.use("/products", require("./routes/productsRouter")) //test etmeli
 router.use("/orders", require("./routes/ordersRouter"))
 router.use("/materials",require("./routes/materialRouter"))

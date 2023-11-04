@@ -19,7 +19,6 @@ router.get('/', getAllActiveProducts);
 router.get("/:id", getOneProduct)
 router.post("/add", addProduct)
 router.post("/add/size/:id", addSize)
-router.post("/add/color/:id", addColor)
 router.patch('/:id', editProduct);
 router.patch('/edit-status/:id', editProductStatus);
 router.delete('/:id', deleteProduct);

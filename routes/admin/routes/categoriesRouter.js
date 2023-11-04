@@ -14,7 +14,6 @@ const router = express.Router();
 router.get('/', getAllCategories);
 router.get("/:id", getOneCategory)
 router.post('/add', addCategory);
-// router.post("/brands/add", addCategoryBrand)
 router.post("/upload-image/:id", uploadCategoryImage)
 router.patch('/:id', editCategory);
 router.post('/delete/:id', deleteCategory);
