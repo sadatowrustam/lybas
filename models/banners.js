@@ -14,6 +14,10 @@ module.exports = (sequelize, DataTypes) => {
             defaultValue:DataTypes.UUIDV4
         },
         link: DataTypes.STRING,
+        name:DataTypes.STRING,
+        price:DataTypes.INTEGER,
+        startDate:DataTypes.DATE,
+        endDate:DataTypes.DATE,
         image: DataTypes.STRING
     }, {
         sequelize,

@@ -4,7 +4,7 @@ const AppError = require('./utils/appError');
 const fileupload = require("express-fileupload")
 const app = express();
 
-// app.use(require('helmet')());
+// app.use(require('helmet')())
 const limiter = require('express-rate-limit')({
     max: 1000,
     windowMs: 1000,

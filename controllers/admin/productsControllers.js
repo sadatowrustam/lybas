@@ -9,28 +9,11 @@ const uuid = require("uuid")
 const {
     Products,
     Categories,
-    Subcategories,
-    Stock,
-    Brands,
+    Material,
     Images,
     Productsizes,
     Productcolor,
-    Colors,
-    Details
 } = require('../../models');
-const include = [{
-        model: Stock,
-        as: 'product_stock',
-    },
-    {
-        model: Images,
-        as: "images",
-        order: [
-            ["id", "DESC"]
-        ]
-    }
-];
-
 const capitalize = function(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 };
@@ -65,7 +48,6 @@ exports.getAllActiveProducts = catchAsync(async(req, res) => {
     }
 
     if (categoryId) where.categoryId = categoryId;
-    if (subcategoryId) where.subcategoryId = subcategoryId;
     const products = await Products.findAll({
         where,
         limit,
@@ -76,9 +58,8 @@ exports.getAllActiveProducts = catchAsync(async(req, res) => {
                 limit: 4
             },
             {
-                model: Productcolor,
-                as: "product_colors",
-                limit: 1
+                model: Material,
+                as: "material",
             },
             {
                 model: Productsizes,
@@ -97,19 +78,7 @@ exports.getOneProduct = catchAsync(async(req, res, next) => {
     const { id } = req.params
     const oneProduct = await Products.findOne({
         where: { id },
-        include: [{
-                model: Productcolor,
-                as: "product_colors",
-                include: [{
-                        model: Images,
-                        as: "product_images"
-                    },
-                    {
-                        model: Productsizes,
-                        as: "product_sizes",
-                    }
-                ]
-            },
+        include: [
             {
                 model: Productsizes,
                 as: "product_sizes",
@@ -152,7 +121,7 @@ exports.addSize = catchAsync(async(req, res, next) => {
 })
 exports.addProduct = catchAsync(async(req, res, next) => {
     const category = await Categories.findOne({
-        where: { category_id: req.body.category_id },
+        where: { id: req.body.categoryId },
     });
     if (!category)
         return next(new AppError('Category did not found with that ID', 404));
@@ -184,7 +153,7 @@ exports.editProduct = catchAsync(async(req, res, next) => {
 });
 exports.editProductStatus = catchAsync(async(req, res, next) => {
     const product = await Products.findOne({
-        where: { product_id: req.params.id },
+        where: { id: req.params.id },
     });
     if (!product)
         return next(new AppError('Product did not found with that ID', 404));
@@ -243,8 +212,6 @@ exports.uploadProductImage = catchAsync(async(req, res, next) => {
     }
     return res.status(201).send(imagesArray);
 });
-
-
 exports.deleteProductImage = catchAsync(async(req, res, next) => {
     const image = await Images.findOne({ where: { id: req.params.id } })
 

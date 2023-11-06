@@ -14,6 +14,17 @@ module.exports = {
             image: {
                 type: DataTypes.STRING
             },
+            name: {
+                type: DataTypes.STRING
+            },
+            startDate: {
+                allowNull: false,
+                type: DataTypes.DATE
+            },
+            endDate: {
+                allowNull: false,
+                type: DataTypes.DATE
+            },
             createdAt: {
                 allowNull: false,
                 type: DataTypes.DATE
