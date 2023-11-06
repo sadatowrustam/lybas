@@ -119,6 +119,10 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.BOOLEAN,
             defaultValue: false
         },
+        welayat: {
+            type: DataTypes.STRING,
+
+        },
         stock:DataTypes.INTEGER,
         note:DataTypes.TEXT,
         categoryId: DataTypes.UUID,

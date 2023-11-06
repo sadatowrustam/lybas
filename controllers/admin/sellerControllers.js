@@ -2,18 +2,27 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const AppError = require('../../utils/appError');
 const catchAsync = require('../../utils/catchAsync');
-const { Seller, Products, Productsizes, Productcolor, Images } = require('../../models');
-
+const { Seller, Products, Productsizes, Categories, Images,Sellercategory } = require('../../models');
+const {Op}=require("sequelize")
+const capitalize = function(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+};
 exports.addSeller = catchAsync(async(req, res, next) => {
     let { password } = req.body
+    console.log(req.body)
     req.body.password = await bcrypt.hash(password, 10)
     req.body.isActive = true
     let seller = await Seller.create(req.body)
+    for(const categoryId of req.body.categoryIds){
+        const cat=await Sellercategory.create({categoryId,sellerId:seller.id})
+        console.log(cat)
+    }
     return res.send(seller)
 })
 exports.isActive = catchAsync(async(req, res, next) => {
-    let { isActive, seller_id } = req.body
-    let seller = await Seller.findOne({ where: { seller_id } })
+    let { isActive, id } = req.body
+    console.log(req.body)
+    let seller = await Seller.findOne({ where: { id } })
     if (!seller) {
         return next(new AppError("There is no seller with this id", 404))
     }
@@ -21,16 +30,53 @@ exports.isActive = catchAsync(async(req, res, next) => {
     return res.send(seller)
 })
 exports.allSellers = catchAsync(async(req, res, next) => {
-    let limit = req.query.limit || 20
-    const offset = req.query.offset || 0
+    const filter=JSON.parse(req.query.filter)
+    let {keyword,welayat}=req.query
+    const {endDate,startDate}=filter
+    var where = {};
+    if(welayat && welayat!="undefined") where.welayat=welayat
+    if (keyword && keyword != "undefined") {
+        let keywordsArray = [];
+        keyword = keyword.toLowerCase();
+        keywordsArray.push('%' + keyword + '%');
+        keyword = '%' + capitalize(keyword) + '%';
+        keywordsArray.push(keyword);
+        where = {
+            [Op.or]: [
+                {
+                    name: {
+                        [Op.like]: {
+                            [Op.any]: keywordsArray,
+                        },
+                    },
+                },
+                {
+                    email: {
+                        [Op.like]: {
+                            [Op.any]: keywordsArray,
+                        },
+                    },
+                }
+            ],
+        };
+    }
+    if(filter.startDate!=undefined){
+        where.createdAt = {
+            [Op.gte]: new Date(startDate),
+            [Op.lte]: new Date(endDate) 
+        }
+    }
+    const limit=req.query.limit || 20
+    const offset=req.query.offset || 0
     let data = await Seller.findAll({
         limit,
         offset,
         order: [
-            ["id", "DESC"]
-        ]
+            ["createdAt", "DESC"]
+        ],
+        where
     })
-    let count = await Seller.count()
+    let count = await Seller.count({where})
     return res.send({ data, count })
 })
 exports.oneSeller = catchAsync(async(req, res, next) => {
@@ -38,26 +84,42 @@ exports.oneSeller = catchAsync(async(req, res, next) => {
     let seller = await Seller.findOne({
         where: { id },
         include: [{
-            model: Products,
-            as: "products",
-            include: {
-                model: Images,
-                as: "images"
+            model:Categories,
+            as:"category",
+            attributes:{}
             }
-        }]
+        ]
     })
     return res.send(seller)
 })
+exports.updateSeller = catchAsync(async(req, res, next) => {
+    const { name, welayat,email,phone_number,isActive,image} = req.body;
+    console.log(req.body)
+    if (!name|| !welayat)
+        return next(new AppError('Invalid credentials', 400));
+
+    const seller = await Seller.findOne({ where: { id: [req.params.id] } });
+    await seller.update({
+        name,
+        isActive,
+        image,
+        welayat,
+        email,
+        phone_number
+    });
+    await Sellercategory.destroy({where:{sellerId:seller.id}})
+    for(const categoryId of req.body.categoryIds){
+        await Sellercategory.create({categoryId,sellerId:seller.id})
+    }
+    return res.send(seller)
+});
 exports.deleteSeller = catchAsync(async(req, res, next) => {
-    const seller = await Seller.findOne({ where: { seller_id: req.params.id }, include: { model: Products, as: "seller_products" } })
+    const seller = await Seller.findOne({ where: { id: req.params.id }, include: { model: Products, as: "products" } })
     if (!seller) return next(new AppError("seller with that id not found", 404))
-    for (const one_product of seller.seller_products) {
+    for (const one_product of seller.products) {
         const product = await Products.findOne({
             where: { product_id: one_product.product_id },
-            include: [{
-                    model: Productcolor,
-                    as: "product_colors"
-                },
+            include: [
                 {
                     model: Productsizes,
                     as: "product_sizes"
@@ -65,12 +127,6 @@ exports.deleteSeller = catchAsync(async(req, res, next) => {
             ]
         });
         if (!product) return next(new AppError("Product with that id not found", 404))
-        if (product.product_colors) {
-            for (const color of product.product_colors) {
-                let product_color = await Productcolor.findOne({ where: { id: color.id } })
-                await product_color.destroy()
-            }
-        }
         if (product.product_sizes) {
             for (const size of product.product_sizes) {
                 let product_size = await Productsizes.findOne({ where: { id: size.id } })
@@ -93,6 +149,8 @@ exports.deleteSeller = catchAsync(async(req, res, next) => {
         }
         await product.destroy();
     }
+    await seller.destroy()
+    return res.send("Success")
 
 })
 exports.getStats=catchAsync(async(req, res, next) =>{
@@ -118,3 +176,11 @@ exports.getStats=catchAsync(async(req, res, next) =>{
     });
     return res.send({data,data2})
 })
+exports.uploadSellerImage = catchAsync(async(req, res, next) => {
+    req.files = Object.values(req.files)
+    const image = `${req.seller.id}_seller.webp`;
+    const photo = req.files[0].data
+    let buffer = await sharp(photo).webp().toBuffer()
+    await sharp(buffer).toFile(`static/${image}`);
+    return res.status(201).send(image);
+});

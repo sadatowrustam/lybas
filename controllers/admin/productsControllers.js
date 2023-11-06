@@ -12,7 +12,6 @@ const {
     Material,
     Images,
     Productsizes,
-    Productcolor,
 } = require('../../models');
 const capitalize = function(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -20,35 +19,11 @@ const capitalize = function(string) {
 exports.getAllActiveProducts = catchAsync(async(req, res) => {
     const limit = req.query.limit || 20;
     const offset = req.query.offset || 0;
-    let { keyword, categoryId, subcategoryId } = req.query;
+    let { keyword, categoryId,materialId,welayat} = req.query;
     var where = {};
-    if (keyword && keyword != "undefined") {
-        let keywordsArray = [];
-        keyword = keyword.toLowerCase();
-        keywordsArray.push('%' + keyword + '%');
-        keyword = '%' + capitalize(keyword) + '%';
-        keywordsArray.push(keyword);
-        where = {
-            [Op.or]: [{
-                    name_tm: {
-                        [Op.like]: {
-                            [Op.any]: keywordsArray,
-                        },
-                    },
-                },
-                {
-                    name_ru: {
-                        [Op.like]: {
-                            [Op.any]: keywordsArray,
-                        },
-                    },
-                },
-            ],
-        };
-    }
+    where=getWhere(req.query)
 
-    if (categoryId) where.categoryId = categoryId;
-    const products = await Products.findAll({
+    const data = await Products.findAll({
         where,
         limit,
         offset,
@@ -72,7 +47,7 @@ exports.getAllActiveProducts = catchAsync(async(req, res) => {
         ],
     });
     const count = await Products.count()
-    return res.status(200).send({ products, count });
+    return res.status(200).send({ data, count });
 });
 exports.getOneProduct = catchAsync(async(req, res, next) => {
     const { id } = req.params
@@ -194,8 +169,7 @@ exports.deleteProduct = catchAsync(async(req, res, next) => {
     return res.status(200).send('Successfully Deleted');
 });
 exports.uploadProductImage = catchAsync(async(req, res, next) => {
-    const id = req.params.id;
-    const updateProduct = await Products.findOne({ where: { id } });
+    const id=v4()
     let imagesArray = []
     req.files = Object.values(req.files)
     req.files = intoArray(req.files)
@@ -207,13 +181,13 @@ exports.uploadProductImage = catchAsync(async(req, res, next) => {
         const photo = images.data
         let buffer = await sharp(photo).webp().toBuffer()
         await sharp(buffer).toFile(`static/${image}`);
-        let newImage = await Images.create({ image, id:image_id, productId: updateProduct.id })
+        let newImage = await Images.create({ image, id:image_id, productId: id })
         imagesArray.push(newImage)
     }
-    return res.status(201).send(imagesArray);
+    return res.status(201).send({images:imagesArray,id});
 });
 exports.deleteProductImage = catchAsync(async(req, res, next) => {
-    const image = await Images.findOne({ where: { id: req.params.id } })
+    const image = await Images.findOne({ where: { image: req.params.image } })
 
     fs.unlink(`static/${image.image}`, function(err) {
         if (err) throw err;
@@ -225,4 +199,54 @@ exports.deleteProductImage = catchAsync(async(req, res, next) => {
 const intoArray = (file) => {
     if (file[0].length == undefined) return file
     else return file[0]
+}
+function getWhere({ categoryIds,sizes,materialIds,keyword}) { 
+    let where = []
+    if (keyword && keyword != "undefined") {
+        let keywordsArray = [];
+        keyword = keyword.toLowerCase();
+        keywordsArray.push('%' + keyword + '%');
+        keyword = '%' + capitalize(keyword) + '%';
+        keywordsArray.push(keyword);
+        where.push({
+            [Op.or]: [{
+                    name_tm: {
+                        [Op.like]: {
+                            [Op.any]: keywordsArray,
+                        },
+                    },
+                },
+                {
+                    name_ru: {
+                        [Op.like]: {
+                            [Op.any]: keywordsArray,
+                        },
+                    },
+                },
+                {
+                    name_en: {
+                        [Op.like]: {
+                            [Op.any]: keywordsArray,
+                        },
+                    },
+                },
+            ],
+        });
+    }
+    if(sizes){
+        where.push(Sequelize.literal("product_sizes.id IN (?)",[sizes]))
+    }    
+    if(categoryIds){
+        where.push({categoryId: {
+            [Op.in]: categoryIds
+          }
+        })
+    }
+    if(materialIds){
+        where.push({materialId: {
+            [Op.in]: materialIds
+          }
+        })
+    }
+    return where
 }

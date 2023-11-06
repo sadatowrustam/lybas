@@ -114,10 +114,6 @@ module.exports = {
                 type: DataTypes.INTEGER,
                 defaultValue: 0
             },
-            sex: {
-                type: DataTypes.STRING,
-                defaultValue: "-"
-            },
             likeCount: {
                 type: DataTypes.INTEGER,
                 defaultValue: 0
@@ -158,6 +154,10 @@ module.exports = {
             },
             stock:{
                 type:DataTypes.INTEGER
+            },
+            welayat: {
+                type: DataTypes.STRING,
+    
             },
             note:{
                 type:DataTypes.TEXT

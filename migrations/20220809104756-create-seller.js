@@ -40,6 +40,9 @@ module.exports = {
             welayat:{
                 type:DataTypes.STRING
             },
+            link:{
+                type:DataTypes.STRING
+            },
             createdAt: {
                 allowNull: false,
                 type: DataTypes.DATE

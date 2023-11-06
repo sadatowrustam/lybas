@@ -17,9 +17,9 @@ module.exports = (sequelize, DataTypes) => {
     header_tm: DataTypes.STRING,
     header_ru: DataTypes.STRING,
     header_en: DataTypes.STRING,
-    text_tm: DataTypes.TEXT,
-    text_ru: DataTypes.TEXT,
-    text_en: DataTypes.TEXT,
+    body_tm: DataTypes.TEXT,
+    body_ru: DataTypes.TEXT,
+    body_en: DataTypes.TEXT,
     image: DataTypes.STRING
   }, {
     sequelize,

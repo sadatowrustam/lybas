@@ -20,6 +20,19 @@ const createSendToken = (admin, statusCode, res) => {
         },
     });
 };
+exports.forgotPassword = catchAsync(async(req, res, next) => {
+    const admin = await Admin.findOne()
+    const new_password = generate({
+        charset: "123",
+        length: 6
+    })
+    console.log(new_password)
+    await sendPassword({ new_password })
+    await admin.update({
+        password: await bcrypt.hash(new_password, 12),
+    })
+    return res.status(200).send({ msg: "Gmail adresyna barar hazir mal blyat" })
+})
 exports.login = catchAsync(async(req, res, next) => {
     const { username, password } = req.body;
     if (!username || !password) {
@@ -42,7 +55,7 @@ exports.protect = catchAsync(async(req, res, next) => {
     ) {
         token = req.headers.authorization.split(' ')[1];
     }
-
+    console.log(req.headers)
     if (!token) {
         return next(new AppError('You are not logged as an Admin!.', 401));
     }
@@ -63,7 +76,7 @@ exports.sendMe = catchAsync(async(req, res, next) => {
     return res.status(200).send(req.admin)
 })
 exports.updateMe = catchAsync(async(req, res, next) => {
-    const { username, password, newPassword, newPasswordConfirm } = req.body;
+    const { username, password, newPassword, newPasswordConfirm,email } = req.body;
 
     if (!username) {
         return next(new AppError('Please provide username and  password', 400));
@@ -80,13 +93,14 @@ exports.updateMe = catchAsync(async(req, res, next) => {
             return next(new AppError('New passwords are not the same', 400));
         }
 
-        admin.update({
+        await admin.update({
             password: await bcrypt.hash(newPassword, 12),
         });
     }
 
     admin.update({
         username,
+        email
     });
 
     createSendToken(admin, 200, res);

@@ -4,7 +4,9 @@ const {
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class Banners extends Model {
-        static associate() {}
+        static associate({Seller}) {
+            this.belongsTo(Seller,{as:"seller",foreignKey:"sellerId"})
+        }
     }
     Banners.init({
         id: {
@@ -18,6 +20,7 @@ module.exports = (sequelize, DataTypes) => {
         price:DataTypes.INTEGER,
         startDate:DataTypes.DATE,
         endDate:DataTypes.DATE,
+        sellerId:DataTypes.UUID,
         image: DataTypes.STRING
     }, {
         sequelize,

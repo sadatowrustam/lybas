@@ -17,6 +17,12 @@ module.exports = {
             name: {
                 type: DataTypes.STRING
             },
+            price:{
+                type:DataTypes.INTEGER
+            },
+            sellerId:{
+                type:DataTypes.UUID
+            },
             startDate: {
                 allowNull: false,
                 type: DataTypes.DATE

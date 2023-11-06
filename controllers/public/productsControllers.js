@@ -1,4 +1,4 @@
-const { Op } = require('sequelize');
+const { Op, Sequelize } = require('sequelize');
 const {
     Products,
     Categories,
@@ -570,7 +570,7 @@ exports.setRating = catchAsync(async(req, res, next) => {
     return res.status(200).send({ product })
 })
 
-function getWhere({ max_price, min_price,categoryIds}) {
+function getWhere({ max_price, min_price,categoryIds,colorIds,sizes,materialIds}) { 
     let where = []
     if (max_price && min_price == "") {
         let price = {
@@ -600,24 +600,25 @@ function getWhere({ max_price, min_price,categoryIds}) {
         }
         where.push(price)
     }
+    
+    where.push(Sequelize.literal("product_sizes IN (?)",[sizes]))
     if(categoryIds){
         where.push({categoryId: {
             [Op.in]: categoryIds
           }
         })
     }
-    if (sex) {
-        sex.split = (",")
-        var array = []
-        for (let i = 0; i < sex.length; i++) {
-            array.push({
-                sex: {
-                    [Op.eq]: sex[i]
-                }
-            })
-        }
-        where.push(array)
-
+    if(colorIds){
+        where.push({colorId: {
+            [Op.in]: colorIds
+          }
+        })
+    }
+    if(materialIds){
+        where.push({materialId: {
+            [Op.in]: materialIds
+          }
+        })
     }
     return where
 }

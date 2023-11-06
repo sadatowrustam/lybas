@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     sellerId: DataTypes.UUID
   }, {
     sequelize,
-    
+    tableName:"sellercategories",
     modelName: 'Sellercategory',
   });
   return Sellercategory;
