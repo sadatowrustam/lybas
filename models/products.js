@@ -4,13 +4,14 @@ const {
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class Products extends Model {
-        static associate({ Users, Categories, Images, Productsizes,Seller,Material }) {
+        static associate({ Users, Categories, Images, Productsizes,Seller,Material,Colors }) {
             this.belongsTo(Categories, { foreignKey: "categoryId", as: "category" })
             this.hasMany(Images, { foreignKey: "productId", as: "images" })
             this.hasMany(Productsizes, { foreignKey: "productId", as: "product_sizes" })
-            this.belongsToMany(Users, { through: "Likedproducts", as: "liked_users", foreignKey: "productId" })
+            this.belongsToMany(Users, { through: "Likedproducts", as: "liked_users", foreignKey: "userId" })
             this.belongsTo(Seller, { as: "seller", foreignKey: "sellerId" })
             this.belongsTo(Material,{as: "material", foreignKey: "materialId"})
+            this.belongsTo(Colors,{as:"color",foreignKey:"colorId"})
         }
     }
     Products.init({
@@ -108,6 +109,10 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             defaultValue: 0
         },
+        sold_count: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0
+        },
         likeCount: {
             type: DataTypes.INTEGER,
             defaultValue: 0
@@ -128,6 +133,8 @@ module.exports = (sequelize, DataTypes) => {
         categoryId: DataTypes.UUID,
         sellerId: DataTypes.UUID,
         materialId: DataTypes.UUID,
+        colorId:DataTypes.UUID,
+        sizeIds:DataTypes.ARRAY(DataTypes.STRING)
     }, {
         sequelize,
         tableName: "products",

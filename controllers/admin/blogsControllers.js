@@ -63,13 +63,15 @@ exports.getAllBlogs=catchAsync(async(req,res,next)=>{
             ],
         };
     }
-    const filter=JSON.parse(req.query.filter)
-    const endDate=new Date(filter.endDate)
-    const startDate=new Date(filter.startDate)
-    if(filter.startDate!=undefined){
-        where.createdAt = {
-            [Op.gte]: startDate,
-            [Op.lte]: endDate 
+    if(req.query.filter){
+        const filter=JSON.parse(req.query.filter)
+        const endDate=new Date(filter.endDate)
+        const startDate=new Date(filter.startDate)
+        if(filter.startDate!=undefined){
+            where.createdAt = {
+                [Op.gte]: startDate,
+                [Op.lte]: endDate 
+            }
         }
     }
     const limit=req.query.limit || 20

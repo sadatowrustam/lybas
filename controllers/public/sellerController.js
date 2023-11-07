@@ -11,7 +11,10 @@ const AppError = require('../../utils/appError');
 
 exports.getAll = catchAsync(async(req, res, next) => {
     const limit = req.query.limit || 20;
-    let { keyword, offset, sort } = req.query;
+    let { keyword, offset, welayat } = req.query;
+    let where={}
+    console.log(welayat)
+    if(welayat && welayat!="") where.welayat=welayat
     let keywordsArray = [];
     if (keyword) {
         keyword = keyword.toLowerCase();
@@ -25,6 +28,7 @@ exports.getAll = catchAsync(async(req, res, next) => {
         ],
         limit,
         offset,
+        where
     });
     return res.status(200).send({ sellers })
 })

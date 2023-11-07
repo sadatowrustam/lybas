@@ -12,6 +12,7 @@ const {
     Material,
     Images,
     Productsizes,
+    Seller
 } = require('../../models');
 const capitalize = function(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -22,7 +23,16 @@ exports.getAllActiveProducts = catchAsync(async(req, res) => {
     let { keyword, categoryId,materialId,welayat} = req.query;
     var where = {};
     where=getWhere(req.query)
-
+    const filter=JSON.parse(req.query.filter)
+    const endDate=new Date(filter.endDate)
+    const startDate=new Date(filter.startDate)
+    if(filter.startDate!=undefined){
+        where.push({createdAt:{
+            [Op.gte]: startDate,
+            [Op.lte]: endDate 
+            }
+        })
+    }
     const data = await Products.findAll({
         where,
         limit,
@@ -39,10 +49,14 @@ exports.getAllActiveProducts = catchAsync(async(req, res) => {
             {
                 model: Productsizes,
                 as: "product_sizes"
+            },
+            {
+                model:Seller,
+                as:"seller"
             }
         ],
         order: [
-            ['id', 'DESC'],
+            ['updatedAt', 'DESC'],
             // ["images", "id", "DESC"]
         ],
     });
@@ -73,9 +87,11 @@ exports.getOneProduct = catchAsync(async(req, res, next) => {
 })
 exports.addSize = catchAsync(async(req, res, next) => {
     var sizes = []
+    var sizeIds=[]
     const product = await Products.findOne({ where: { id: req.params.id } })
     await Productsizes.destroy({ where: { productId: product.id } })
     if (!product) return next(new AppError("Product with that id not found", 404))
+    console.log(req.body.sizes)
     for (let i = 0; i < req.body.sizes.length; i++) {
         let data = {}
         data.price_old = null;
@@ -84,14 +100,19 @@ exports.addSize = catchAsync(async(req, res, next) => {
             data.price_old = req.body.sizes[i].price
             req.body.sizes[i].price = (data.price_old / 100) * (100 - req.body.sizes[i].discount)
         }
-        data.price = req.body.sizes[i].price
-        data.sizeId = req.body.sizes[i].sizeId
-        data.discount=req.body.sizes[i].discount
+        // data.price = req.body.sizes[i].price
+        data.sizeId = req.body.sizes[i]
+        // data.discount=req.body.sizes[i].discount
         data.productId = product.id
         data.stock = req.body.sizes[i].stock
+        console.log(data)
         let product_size = await Productsizes.create(data)
+        sizeIds.push(data.sizeId)
         sizes.push(product_size)
     }
+    console.log(sizeIds)
+    await product.update({sizeIds})
+
     return res.status(201).send(sizes)
 })
 exports.addProduct = catchAsync(async(req, res, next) => {
@@ -109,6 +130,7 @@ exports.addProduct = catchAsync(async(req, res, next) => {
         req.body.price_old = req.body.price;
         req.body.price =(req.body.price / 100) *(100 - req.body.discount);
     }
+    req.body.isActive=true
     const newProduct = await Products.create(req.body);
     return res.status(201).send(newProduct)
 })
@@ -128,7 +150,7 @@ exports.editProduct = catchAsync(async(req, res, next) => {
 });
 exports.editProductStatus = catchAsync(async(req, res, next) => {
     const product = await Products.findOne({
-        where: { id: req.params.id },
+        where: { id: req.body.id },
     });
     if (!product)
         return next(new AppError('Product did not found with that ID', 404));
@@ -169,25 +191,21 @@ exports.deleteProduct = catchAsync(async(req, res, next) => {
     return res.status(200).send('Successfully Deleted');
 });
 exports.uploadProductImage = catchAsync(async(req, res, next) => {
-    const id=v4()
-    let imagesArray = []
     req.files = Object.values(req.files)
     req.files = intoArray(req.files)
-    if (!updateProduct)
-        return next(new AppError('Product did not found with that ID', 404));
     for (const images of req.files) {
         const image_id = v4()
         const image = `${image_id}_product.webp`;
         const photo = images.data
         let buffer = await sharp(photo).webp().toBuffer()
         await sharp(buffer).toFile(`static/${image}`);
-        let newImage = await Images.create({ image, id:image_id, productId: id })
-        imagesArray.push(newImage)
+        let newImage = await Images.create({ image, id:image_id, productId: req.params.id })
+
     }
-    return res.status(201).send({images:imagesArray,id});
+    return res.status(201).send("Sucesss");
 });
 exports.deleteProductImage = catchAsync(async(req, res, next) => {
-    const image = await Images.findOne({ where: { image: req.params.image } })
+    const image = await Images.findOne({ where: { id: req.params.id } })
 
     fs.unlink(`static/${image.image}`, function(err) {
         if (err) throw err;
@@ -200,7 +218,7 @@ const intoArray = (file) => {
     if (file[0].length == undefined) return file
     else return file[0]
 }
-function getWhere({ categoryIds,sizes,materialIds,keyword}) { 
+function getWhere({ categoryId,sizeId,materialId,keyword,welayat}) { 
     let where = []
     if (keyword && keyword != "undefined") {
         let keywordsArray = [];
@@ -233,20 +251,17 @@ function getWhere({ categoryIds,sizes,materialIds,keyword}) {
             ],
         });
     }
-    if(sizes){
-        where.push(Sequelize.literal("product_sizes.id IN (?)",[sizes]))
-    }    
-    if(categoryIds){
-        where.push({categoryId: {
-            [Op.in]: categoryIds
-          }
-        })
+    if(sizeId && sizeId!="undefined"){
+        where.push({sizeIds:{[Op.contains]:[sizeId]}})
     }
-    if(materialIds){
-        where.push({materialId: {
-            [Op.in]: materialIds
-          }
-        })
+    if(categoryId &&categoryId!="undefined"){
+        where.push({categoryId})
+    }
+    if(materialId && materialId!="undefined"){
+        where.push({materialId})
+    }
+    if(welayat&&welayat!="undefined"){
+        where.push({welayat})
     }
     return where
 }

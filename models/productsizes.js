@@ -18,12 +18,17 @@ module.exports = (sequelize, DataTypes) => {
             defaultValue: DataTypes.UUIDV4
         },
         productId: DataTypes.UUID,
-        productColorId: DataTypes.UUID,
         sizeId: DataTypes.UUID,
         price: DataTypes.REAL,
         price_old: DataTypes.REAL,
         discount: DataTypes.INTEGER,
-        stock:DataTypes.INTEGER 
+        stock:{
+            type:DataTypes.INTEGER ,
+            // get() {
+            //     console.log(this.size)
+            //     return this.stock;
+            // }
+        }
     }, 
     {
         sequelize,

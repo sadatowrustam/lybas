@@ -143,7 +143,7 @@ module.exports = {
             subcategoryId: {
                 type: DataTypes.UUID
             },
-            brandId: {
+            colorId: {
                 type: DataTypes.UUID
             },
             sellerId: {
@@ -152,12 +152,17 @@ module.exports = {
             materialId: {
                 type: DataTypes.UUID
             },
+            productId: {
+                type: DataTypes.UUID
+            },
+            sizeIds:{
+                type:DataTypes.ARRAY(DataTypes.STRING)
+            },
             stock:{
                 type:DataTypes.INTEGER
             },
             welayat: {
                 type: DataTypes.STRING,
-    
             },
             note:{
                 type:DataTypes.TEXT

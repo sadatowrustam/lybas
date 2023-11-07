@@ -6,24 +6,34 @@ const {
     Productsizes,
     Images,
     Seller,
-    Searchhistory
+    Searchhistory,
+    Sizes
 } = require('../../models');
 const catchAsync = require('../../utils/catchAsync');
 const AppError = require('../../utils/appError');
+const sequelize=require("sequelize")
 exports.getProducts = catchAsync(async(req, res) => {
     const limit = req.query.limit || 10;
     const { offset } = req.query;
-    const where=getWhere(req.query)
+    const where=getWhere(JSON.parse(req.query.sort))
     const order=getOrder(req.query)
     const products = await Products.findAll({
-        isActive: true,
         order,
         limit,
         offset,
         include: [{
             model: Images,
             as: "images"
-        }, ],
+        }, 
+        {
+            model:Productsizes,
+            as:"product_sizes",
+            include:{
+                model:Sizes,
+                as:"size"
+            }
+        }
+    ],
         where
     });
     return res.status(200).json(products);
@@ -297,19 +307,7 @@ exports.getOneProduct = catchAsync(async(req, res, next) => {
     const id = req.params.id
     const oneProduct = await Products.findOne({
         where: { id },
-        include: [{
-                model: Productcolor,
-                as: "product_colors",
-                include: [{
-                        model: Images,
-                        as: "product_images"
-                    },
-                    {
-                        model: Productsizes,
-                        as: "product_sizes",
-                    }
-                ]
-            },
+        include: [
             {
                 model: Productsizes,
                 as: "product_sizes",
@@ -349,7 +347,7 @@ exports.getOneProduct = catchAsync(async(req, res, next) => {
         oneProduct,
         recommenendations
     }
-    return res.send({ product })
+    return res.send({ data:product })
 })
 exports.discount = catchAsync(async(req, res, next) => {
     const limit = req.query.limit || 20;
@@ -570,8 +568,13 @@ exports.setRating = catchAsync(async(req, res, next) => {
     return res.status(200).send({ product })
 })
 
-function getWhere({ max_price, min_price,categoryIds,colorIds,sizes,materialIds}) { 
+function getWhere({ price,category,color,size,material,welayat}) { 
     let where = []
+    let min_price,max_price
+    if(price){
+        min_price=price.min_price
+        max_price=price.max_price
+    }
     if (max_price && min_price == "") {
         let price = {
             [Op.lte]: max_price
@@ -600,26 +603,39 @@ function getWhere({ max_price, min_price,categoryIds,colorIds,sizes,materialIds}
         }
         where.push(price)
     }
-    
-    where.push(Sequelize.literal("product_sizes IN (?)",[sizes]))
-    if(categoryIds){
+    if(size && size.length>0){
+        let array=[]
+        for (let i=0;i<size.length;i++){
+            array.push({sizeIds:{[Op.contains]:[size[i]]}})
+        }
+        let opor={[Op.or]:array}
+        where.push(opor)
+    }
+    if(category&&category.length!=0){
         where.push({categoryId: {
-            [Op.in]: categoryIds
+            [Op.in]: category
           }
         })
     }
-    if(colorIds){
+    if(color&&color.length!=0){
         where.push({colorId: {
-            [Op.in]: colorIds
+            [Op.in]: color
           }
         })
     }
-    if(materialIds){
+    if(material&&material.length!=0){
         where.push({materialId: {
-            [Op.in]: materialIds
+            [Op.in]: material
           }
         })
     }
+    if(welayat&&welayat.length!=0){
+        where.push({welayat: {
+            [Op.in]: welayat
+          }
+        })
+    }
+    console.log(where)
     return where
 }
 function getOrder({sort}){
@@ -632,11 +648,18 @@ function getOrder({sort}){
         order = [
             ['price', 'ASC']
         ];
+    
     } else if (sort == 3) {
         order = [
             ["sold_count", "DESC"]
         ]
-    } else order = [
+    
+    }else if(sort==2){
+        order=[["likeCount","DESC"]]
+    }else if(sort==4){
+        order=[["discount","DESC"]]
+    }
+    else order = [
         ['updatedAt', 'DESC']
     ];
     return order

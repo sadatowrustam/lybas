@@ -6,8 +6,8 @@ const capitalize = function(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 };
 exports.getAllBanners = catchAsync(async(req, res) => {
+
     const filter=JSON.parse(req.query.filter)
-    console.log(filter)
     let keyword=req.query.keyword
     const {endDate,startDate}=filter
     console.log(keyword,endDate,startDate)
