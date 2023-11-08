@@ -5,7 +5,7 @@ const {
 module.exports = (sequelize, DataTypes) => {
   class Comments extends Model {
     static associate({Products,Users,Images}) {
-      this.belongsTo(Products,{as:"product",foreignKey:"userId"})
+      this.belongsTo(Products,{as:"product",foreignKey:"productId"})
       this.belongsTo(Users,{as:"user",foreignKey:"userId"})
       this.hasMany(Images,{as:"images",foreignKey:"commentId"})
     }
@@ -27,6 +27,7 @@ module.exports = (sequelize, DataTypes) => {
     deletedBy: DataTypes.STRING
   }, {
     sequelize,
+    tableName:"comments",
     modelName: 'Comments',
   });
   return Comments;

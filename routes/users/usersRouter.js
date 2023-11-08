@@ -47,4 +47,5 @@ router.delete("/not-ordered/:id", protect, deleteProduct)
 router.delete("/not-ordered/multiple/", protect, deleteSelected)
 router.get("/like", protect, getUsersLikedProducts)
 router.post("/like", protect, likeProduct) 
+router.post("/dislike",protect,dislikeProduct)
 module.exports = router;

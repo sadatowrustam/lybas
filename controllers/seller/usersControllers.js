@@ -1,13 +1,17 @@
 const bcrypt = require('bcryptjs');
 const AppError = require('../../utils/appError');
 const catchAsync = require('../../utils/catchAsync');
-const { Seller,Products,Sellercategory } = require('../../models');
+const { Seller,Products,Sellercategory,Mails } = require('../../models');
 const { createSendToken } = require('./../../utils/createSendToken');
 const sharp = require('sharp');
 exports.getMe = catchAsync(async(req, res, next) => {
     return res.status(200).send(req.seller);
 });
-
+exports.newAccount=catchAsync(async(req, res, next) => {
+    req.body.data=JSON.stringify(req.body.data)
+    const mail=await Mails.create(req.body)
+    return res.status(200).send(mail)
+})
 exports.updateMyPassword = catchAsync(async(req, res, next) => {
     const { currentPassword, newPassword, newPasswordConfirm } = req.body;
     if (!currentPassword || !newPassword)

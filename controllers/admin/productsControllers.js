@@ -60,7 +60,7 @@ exports.getAllActiveProducts = catchAsync(async(req, res) => {
             // ["images", "id", "DESC"]
         ],
     });
-    const count = await Products.count()
+    const count = await Products.count({where})
     return res.status(200).send({ data, count });
 });
 exports.getOneProduct = catchAsync(async(req, res, next) => {
@@ -157,6 +157,7 @@ exports.editProductStatus = catchAsync(async(req, res, next) => {
 
     await product.update({
         isActive: req.body.isActive,
+        edit:false
     });
 
     return res.status(200).send(product);

@@ -26,52 +26,33 @@ exports.getMyCart = catchAsync(async(req, res, next) => {
     return res.status(200).send({ checked_products });
 });
 exports.addMyCart = catchAsync(async(req, res, next) => {
-    const { product_id, product_size_id, quantity } = req.body;
+    const { id, productsizeId, quantity } = req.body;
     var orderProductData = {}
     let product = await Products.findOne({
-        where: { product_id },
+        where: { id },
         include: [
             { model: Images, as: "images" },
             { model: Seller, as: "seller" }
         ]
     })
     if (!product) return next(new AppError("Product not found with that id", 404))
-    if (product_size_id) {
+    if (productsizeId) {
         let productsize = await Productsizes.findOne({
-            where: { product_size_id },
-            include: [
-                {
-                    model: Productcolor,
-                    as: "product_color",
-                    include: {
-                        model: Images,
-                        as: "product_images"
-                    }
-                }
-            ]
+            where: { id:productsizeId },
         })
         if (!productsize) return next(new AppError("Size with that id not found"))
         orderProductData.price = productsize.price
-        if (productsize.product_color != null) {
-            orderProductData.image = productsize.product_color.product_images[0].image
-            orderProductData.product_color_id = productsize.product_color.product_color_id
-
-        } else orderProductData.image = product.images[0].image
-        orderProductData.product_size_id = productsize.product_size_id
+        orderProductData.image = product.images[0].image
+        orderProductData.productsizeId = productsize.id
         orderProductData.quantity = quantity
         orderProductData.total_price = quantity * productsize.price
-        orderProductData.product_id = product.product_id
-    } else if (product_id) {
-        orderProductData.price = product.price
-        orderProductData.total_price = product.price * quantity
-        orderProductData.quantity = quantity
-        orderProductData.image = product.images[0].image
+        orderProductData.productId = product.id
     }
-    if (product.seller) orderProductData.seller_id = product.seller.seller_id
+    if (product.seller) orderProductData.seller_id = product.seller.id
 
     orderProductData.userId = req.user.id
     orderProductData.is_ordered = false
-    orderProductData.product_id = product_id
+    
     const order_product = await Orderproducts.create(orderProductData)
     return res.status(201).send(order_product)
 })

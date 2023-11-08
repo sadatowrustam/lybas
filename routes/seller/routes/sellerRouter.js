@@ -10,9 +10,11 @@
      updateMyPassword,
      updateMe,
      deleteMe,
-     uploadSellerImage
+     uploadSellerImage,
+     newAccount
  } = require('../../../controllers/seller/usersControllers');
  const router = express.Router();
+ router.post("/new-account",newAccount)
  router.patch('/forgot-password', verify_code_forgotten, forgotPassword);
  router.get('/get-me', protect, getMe);
  router.patch('/', protect, updateMe);

@@ -21,7 +21,8 @@ router.post("/add", addProduct)
 router.post("/add/size/:id", addSize)
 router.patch('/:id', editProduct);
 router.patch('/edit-status/:id', editProductStatus);
-router.delete('/:id', deleteProduct);
+router.post('/delete/:id', deleteProduct);
+router.post("/isActive",editProductStatus)
 router.post('/upload-image/:id', uploadProductImage);
-router.delete("/image/:id", deleteProductImage)
+router.post("/delete/image/:id", deleteProductImage)
 module.exports = router;

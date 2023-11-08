@@ -7,8 +7,14 @@ module.exports = (sequelize, DataTypes) => {
         static associate(models) {}
     }
     Likedproducts.init({
-        productId: DataTypes.INTEGER,
-        userId: DataTypes.INTEGER
+        id: {
+            allowNull: false,
+            primaryKey: true,
+            type: DataTypes.UUID,
+            defaultValue: DataTypes.UUIDV4
+        },
+        productId: DataTypes.UUID,
+        userId: DataTypes.UUID
     }, {
         sequelize,
         tableName: "likedproducts",

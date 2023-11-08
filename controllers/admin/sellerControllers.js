@@ -118,7 +118,7 @@ exports.deleteSeller = catchAsync(async(req, res, next) => {
     if (!seller) return next(new AppError("seller with that id not found", 404))
     for (const one_product of seller.products) {
         const product = await Products.findOne({
-            where: { product_id: one_product.product_id },
+            where: { id: one_product.id },
             include: [
                 {
                     model: Productsizes,

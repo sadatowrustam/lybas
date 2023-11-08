@@ -3,7 +3,9 @@ const {
     Products,
     Images,
     Seller,
-    Categories
+    Categories,
+    Productsizes,
+    Sizes
 } = require('../../models');
 const catchAsync = require('../../utils/catchAsync');
 const AppError = require('../../utils/appError');
@@ -13,8 +15,10 @@ exports.getAll = catchAsync(async(req, res, next) => {
     const limit = req.query.limit || 20;
     let { keyword, offset, welayat } = req.query;
     let where={}
-    console.log(welayat)
-    if(welayat && welayat!="") where.welayat=welayat
+    if(welayat && welayat!="") {
+        welayat=welayat.split(",")
+        where.welayat=welayat
+    }
     let keywordsArray = [];
     if (keyword) {
         keyword = keyword.toLowerCase();
@@ -24,7 +28,7 @@ exports.getAll = catchAsync(async(req, res, next) => {
     }
     const sellers = await Seller.findAll({
         order: [
-            ["id", "DESC"]
+            ["createdAt", "DESC"]
         ],
         limit,
         offset,
@@ -34,16 +38,28 @@ exports.getAll = catchAsync(async(req, res, next) => {
 })
 exports.sellerProduct = catchAsync(async(req, res, next) => {
     let id = req.params.id
-    const seller = await Seller.findOne({ where: { id },include:{model:Categories,attributes:[]} })
+    let where=[]
+    if(req.query.sort)
+        where=getWhere(JSON.parse(req.query.sort))
+    where.push({sellerId:id})
+    const seller = await Seller.findOne({ where: { id },include:{model:Categories,as:"category"} })
     if (!seller) {
         return next(new AppError(`Seller with id ${id} not found`))
     }
     const product = await Products.findAndCountAll({
-        where: { sellerId: seller.id, isActive: true },
+        where,
         include: [{
+            model: Productsizes,
+            as: "product_sizes",
+            include:{
+                model:Sizes,
+                as:"size"
+            }
+        },
+        {
             model: Images,
-            as: "images"
-        }]
+            as: "images",
+        },]
     })
     // product = await isLiked(product)
     return res.send({ seller, product })
@@ -58,7 +74,8 @@ exports.sellerProductNew = catchAsync(async(req, res, next) => {
         where: { sellerId: seller.id, isActive: true,isNew:true },
         include: [{
             model: Images,
-            as: "images"
+            as: "images",
+
         }]
     })
     // product = await isLiked(product)
@@ -66,4 +83,73 @@ exports.sellerProductNew = catchAsync(async(req, res, next) => {
 })
 const capitalize = function(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
+}
+function getWhere({ price,category,color,size,material,welayat}) { 
+    let where = []
+    let min_price,max_price
+    if(price){
+        min_price=price.min_price
+        max_price=price.max_price
+    }
+    if (max_price && min_price == "") {
+        let price = {
+            [Op.lte]: max_price
+        }
+
+        where.push({ price })
+    } else if (max_price == "" && min_price) {
+        let price = {
+            [Op.gte]: min_price
+        }
+        where.push({ price })
+
+    } else if (max_price && min_price) {
+        let price = {
+            [Op.and]: [{
+                    price: {
+                        [Op.gte]: min_price
+                    }
+                },
+                {
+                    price: {
+                        [Op.lte]: max_price
+                    }
+                }
+            ],
+        }
+        where.push(price)
+    }
+    if(size && size.length>0){
+        let array=[]
+        for (let i=0;i<size.length;i++){
+            array.push({sizeIds:{[Op.contains]:[size[i]]}})
+        }
+        let opor={[Op.or]:array}
+        where.push(opor)
+    }
+    if(category&&category.length!=0){
+        where.push({categoryId: {
+            [Op.in]: category
+          }
+        })
+    }
+    if(color&&color.length!=0){
+        where.push({colorId: {
+            [Op.in]: color
+          }
+        })
+    }
+    if(material&&material.length!=0){
+        where.push({materialId: {
+            [Op.in]: material
+          }
+        })
+    }
+    if(welayat&&welayat.length!=0){
+        where.push({welayat: {
+            [Op.in]: welayat
+          }
+        })
+    }
+    return where
 }

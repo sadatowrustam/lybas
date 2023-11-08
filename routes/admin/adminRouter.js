@@ -17,4 +17,5 @@ router.use("/orders", require("./routes/ordersRouter"))
 router.use("/materials",require("./routes/materialRouter"))
 router.use("/users", protect, require("./routes/usersRouter"))
 router.use("/seller", require("./routes/sellerRouter")) 
+router.use("/mails",require("./routes/mailRouter"))
 module.exports = router

@@ -1,7 +1,7 @@
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { Users,Userfriends } = require('../../models');
+const { Users,Verification } = require('../../models');
 const { createSendToken } = require('./../../utils/createSendToken');
 const catchAsync = require('../../utils/catchAsync');
 const AppError = require('../../utils/appError');
@@ -25,9 +25,9 @@ exports.verify_code = catchAsync(async(req, res, next) => {
         };
         var io = req.app.get('socketio');
         io.emit("verification-phone", obj)
-        res.status(200).json({
-            id: generated_code,
-        });
+        console.log(generated_code)
+        await Verification.create({user_phone,code:generated_code})
+        res.send("Verification code is sent")
     } else next();
 });
 
@@ -92,8 +92,11 @@ exports.signup = catchAsync(async(req, res, next) => {
             user_checked_phone,
             password,
             passwordConfirm,
+            code
         } = req.body;
-
+        console.log(req.body)
+        const verification=await Verification.findOne({where:{user_phone:user_checked_phone,code}})
+        if(!verification) return next(new AppError("Wrong verification code",401))
         if (password.length < 6)
             return next(
                 new AppError('Password have to be at least 6 characters', 400)
@@ -112,6 +115,7 @@ exports.signup = catchAsync(async(req, res, next) => {
             user_phone: user_checked_phone,
             password,
         });
+        await verification.destroy()
         createSendToken(newUser, 201, res);
     } else {
         res.send(400).json({

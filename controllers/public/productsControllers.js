@@ -1,21 +1,23 @@
 const { Op, Sequelize } = require('sequelize');
 const {
     Products,
-    Categories,
-    Productcolor,
     Productsizes,
     Images,
     Seller,
     Searchhistory,
-    Sizes
+    Sizes,
+    Material,
+    Colors,
+    Comments
 } = require('../../models');
 const catchAsync = require('../../utils/catchAsync');
 const AppError = require('../../utils/appError');
-const sequelize=require("sequelize")
 exports.getProducts = catchAsync(async(req, res) => {
     const limit = req.query.limit || 10;
     const { offset } = req.query;
-    const where=getWhere(JSON.parse(req.query.sort))
+    let where={}
+    if(req.query.sort)
+        where=getWhere(JSON.parse(req.query.sort))
     const order=getOrder(req.query)
     const products = await Products.findAll({
         order,
@@ -311,7 +313,10 @@ exports.getOneProduct = catchAsync(async(req, res, next) => {
             {
                 model: Productsizes,
                 as: "product_sizes",
-
+                include:{
+                    model:Sizes,
+                    as:"size"
+                }
             },
             {
                 model: Images,
@@ -320,13 +325,25 @@ exports.getOneProduct = catchAsync(async(req, res, next) => {
             {
                 model: Seller,
                 as: "seller"
+            },
+            {
+                model:Material,
+                as:"material"
+            },
+            {
+                model:Colors,
+                as:"color"
+            },
+            {
+                model:Comments,
+                as:"comments"
             }
         ]
     })
     if (!oneProduct) {
         return next(new AppError("Can't find product with that id"), 404);
     }
-    const recommenendations = await Products.findAll({
+    const recommendations = await Products.findAll({
             where: {
                 id: {
                     [Op.ne]: oneProduct.id
@@ -337,15 +354,26 @@ exports.getOneProduct = catchAsync(async(req, res, next) => {
             order: [
                 ["createdAt", "DESC"]
             ],
-            include: {
-                model: Images,
-                as: "images",
-            }
+            include: [
+                {
+                    model: Productsizes,
+                    as: "product_sizes",
+                    include:{
+                        model:Sizes,
+                        as:"size"
+                    }
+                },
+                {
+                    model: Images,
+                    as: "images",
+                },
+            ]
+            
         
     })
     const product = {
         oneProduct,
-        recommenendations
+        recommendations
     }
     return res.send({ data:product })
 })
@@ -631,7 +659,7 @@ function getWhere({ price,category,color,size,material,welayat}) {
     }
     if(welayat&&welayat.length!=0){
         where.push({welayat: {
-            [Op.in]: welayat
+            [Op.contains]: welayat
           }
         })
     }
@@ -660,7 +688,7 @@ function getOrder({sort}){
         order=[["discount","DESC"]]
     }
     else order = [
-        ['updatedAt', 'DESC']
+        ['createdAt', 'DESC']
     ];
     return order
 }

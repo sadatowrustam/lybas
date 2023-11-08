@@ -3,9 +3,10 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    await queryInterface.addColumn('products', 'sold_count', {
-      type: Sequelize.INTEGER,
-      defaultValue: 0,
+    await queryInterface.addColumn('products', 'edited', {
+      type: Sequelize.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     });
   },
 

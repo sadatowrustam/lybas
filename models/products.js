@@ -4,14 +4,15 @@ const {
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class Products extends Model {
-        static associate({ Users, Categories, Images, Productsizes,Seller,Material,Colors }) {
+        static associate({ Users, Categories, Images, Productsizes,Seller,Material,Colors,Comments }) {
             this.belongsTo(Categories, { foreignKey: "categoryId", as: "category" })
             this.hasMany(Images, { foreignKey: "productId", as: "images" })
             this.hasMany(Productsizes, { foreignKey: "productId", as: "product_sizes" })
-            this.belongsToMany(Users, { through: "Likedproducts", as: "liked_users", foreignKey: "userId" })
+            this.belongsToMany(Users, { through: "Likedproducts", as: "liked_users", foreignKey: "productId" })
             this.belongsTo(Seller, { as: "seller", foreignKey: "sellerId" })
             this.belongsTo(Material,{as: "material", foreignKey: "materialId"})
             this.belongsTo(Colors,{as:"color",foreignKey:"colorId"})
+            this.hasMany(Comments,{as:"comments", foreignKey:"productId"})
         }
     }
     Products.init({
@@ -92,6 +93,11 @@ module.exports = (sequelize, DataTypes) => {
                     msg: "Product cannot be empty",
                 },
             },
+        },
+        edited:{
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: true,
         },
         price: DataTypes.REAL,
         price_old: DataTypes.REAL,

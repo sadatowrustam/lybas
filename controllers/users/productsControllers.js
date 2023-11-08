@@ -2,127 +2,123 @@ const { Op } = require('sequelize');
 const {
     Products,
     Categories,
-    Stock,
-    Brands,
-    Productcolor,
     Productsizes,
     Images,
-    Details,
+    Sizes,
+    Material,
+    Instock,
     Likedproducts,
-    Subcategories,
-    Instock
+    Seller,
+    Colors,
+    Comments
 } = require('../../models');
 const catchAsync = require('../../utils/catchAsync');
 const AppError = require('../../utils/appError');
 exports.getProducts = catchAsync(async(req, res) => {
     const limit = req.query.limit || 10;
     const { offset } = req.query;
-    var order, where;
-
+    let where={}
+    if(req.query.sort)
+        where=getWhere(JSON.parse(req.query.sort))
+    const order=getOrder(req.query)
     let products = await Products.findAll({
-        isActive: true,
         order,
         limit,
         offset,
         include: [{
-                model: Images,
-                as: "images"
-            },
-            {
-                model: Productsizes,
-                as: "product_sizes",
+            model: Images,
+            as: "images"
+        }, 
+        {
+            model:Productsizes,
+            as:"product_sizes",
+            include:{
+                model:Sizes,
+                as:"size"
             }
-        ],
+        }
+    ],
         where
     });
-    products = await isLiked(products, req)
+    products=await isLiked(products,req)
     return res.status(200).json(products);
 });
 exports.getOneProduct = catchAsync(async(req, res, next) => {
-    const product_id = req.params.id
-    const oneProduct = await Products.findOne({
-        where: { product_id },
-        include: [{
-                model: Productcolor,
-                as: "product_colors",
-                include: [{
-                        model: Images,
-                        as: "product_images"
-                    },
-                    {
-                        model: Productsizes,
-                        as: "product_sizes",
-                        include: {
-                            model: Stock,
-                            as: "product_size_stock"
-                        }
-                    }
-                ]
-            },
+    const id = req.params.id
+    let oneProduct = await Products.findOne({
+        where: { id },
+        include: [
             {
                 model: Productsizes,
                 as: "product_sizes",
-                include: {
-                    model: Stock,
-                    as: "product_size_stock"
+                include:{
+                    model:Sizes,
+                    as:"size"
                 }
-            },
-            {
-                model: Stock,
-                as: "product_stock",
-                limit: 1
             },
             {
                 model: Images,
                 as: "images"
             },
             {
-                model: Details,
-                as: "details"
+                model: Seller,
+                as: "seller"
             },
             {
-                model: Brands,
-                as: "brand"
+                model:Material,
+                as:"material"
+            },
+            {
+                model:Colors,
+                as:"color"
+            },
+            {
+                model:Comments,
+                as:"comments"
             }
         ]
     })
     if (!oneProduct) {
         return next(new AppError("Can't find product with that id"), 404);
     }
-    const id = oneProduct.categoryId
-    let recommenendations = await Categories.findOne({
-        where: { id },
-        include: {
-            model: Products,
-            as: "products",
+    let recommendations = await Products.findAll({
             where: {
                 id: {
                     [Op.ne]: oneProduct.id
-                }
+                },
+                sellerId:oneProduct.sellerId
             },
             limit: 4,
             order: [
-                ["id", "DESC"]
+                ["createdAt", "DESC"]
             ],
-            include: {
-                model: Images,
-                as: "images",
-            }
-        }
+            include: [
+                {
+                    model: Productsizes,
+                    as: "product_sizes",
+                    include:{
+                        model:Sizes,
+                        as:"size"
+                    }
+                },
+                {
+                    model: Images,
+                    as: "images",
+                },
+            ]  
     })
-    const liked_product = await Likedproducts.findOne({
+    const liked_ids = await Likedproducts.findOne({
         where: {
-            [Op.and]: [{ productId: oneProduct.id }, { userId: req.user.id }]
+            userId: req.user.id , productId: oneProduct.id
         }
     })
-    if (liked_product) oneProduct.isLiked = true
-
-    recommenendations = await isLiked(recommenendations, req)
+    if (liked_ids) oneProduct.isLiked = true
+    recommendations=await isLiked(recommendations,req)
     const product = {
         oneProduct,
-        recommenendations,
+        recommendations
     }
-    return res.send({ product })
+    return res.send({ data:product })
 })
 exports.getTopProducts = catchAsync(async(req, res) => {
     const limit = req.query.limit || 10;
@@ -562,7 +558,7 @@ async function isLiked(products, req) {
     for (let i = 0; i < products.length; i++) {
         const liked_ids = await Likedproducts.findOne({
             where: {
-                [Op.and]: [{ userId: req.user.id }, { productId: products[i].id }]
+                userId: req.user.id , productId: products[i].id
             }
         })
         if (liked_ids) products[i].isLiked = true
@@ -570,12 +566,18 @@ async function isLiked(products, req) {
     return products
 }
 
-function getWhere({ max_price, min_price, sex }) {
+function getWhere({ price,category,color,size,material,welayat}) { 
     let where = []
+    let min_price,max_price
+    if(price){
+        min_price=price.min_price
+        max_price=price.max_price
+    }
     if (max_price && min_price == "") {
         let price = {
             [Op.lte]: max_price
         }
+
         where.push({ price })
     } else if (max_price == "" && min_price) {
         let price = {
@@ -599,18 +601,64 @@ function getWhere({ max_price, min_price, sex }) {
         }
         where.push(price)
     }
-    if (sex) {
-        sex.split = (",")
-        var array = []
-        for (let i = 0; i < sex.length; i++) {
-            array.push({
-                sex: {
-                    [Op.eq]: sex[i]
-                }
-            })
+    if(size && size.length>0){
+        let array=[]
+        for (let i=0;i<size.length;i++){
+            array.push({sizeIds:{[Op.contains]:[size[i]]}})
         }
-        where.push(array)
-
+        let opor={[Op.or]:array}
+        where.push(opor)
     }
+    if(category&&category.length!=0){
+        where.push({categoryId: {
+            [Op.in]: category
+          }
+        })
+    }
+    if(color&&color.length!=0){
+        where.push({colorId: {
+            [Op.in]: color
+          }
+        })
+    }
+    if(material&&material.length!=0){
+        where.push({materialId: {
+            [Op.in]: material
+          }
+        })
+    }
+    if(welayat&&welayat.length!=0){
+        where.push({welayat: {
+            [Op.contains]: welayat
+          }
+        })
+    }
+    console.log(where)
     return where
+}
+function getOrder({sort}){
+    let order=[]
+    if (sort == 1) {
+        order = [
+            ['price', 'DESC']
+        ];
+    } else if (sort == 0) {
+        order = [
+            ['price', 'ASC']
+        ];
+    
+    } else if (sort == 3) {
+        order = [
+            ["sold_count", "DESC"]
+        ]
+    
+    }else if(sort==2){
+        order=[["likeCount","DESC"]]
+    }else if(sort==4){
+        order=[["discount","DESC"]]
+    }
+    else order = [
+        ['createdAt', 'DESC']
+    ];
+    return order
 }

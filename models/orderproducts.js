@@ -10,11 +10,11 @@ module.exports = (sequelize, DataTypes) => {
         }
     }
     Orderproducts.init({
-        product_id: {
+        productId: {
             type: DataTypes.UUID,
             allowNull: false,
         },
-        product_size_id: {
+        productsizeId: {
             type: DataTypes.UUID,
         },
         userId: {

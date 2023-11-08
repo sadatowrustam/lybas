@@ -4,11 +4,11 @@ const catchAsync = require('../../utils/catchAsync');
 const {
     Products,
     Categories,
-    Subcategories,
     Images,
     Productsizes,
-    Productcolor,
-    Details
+    Material,
+    Size,
+    Seller
 } = require('../../models');
 const capitalize = function(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -16,71 +16,55 @@ const capitalize = function(string) {
 exports.getAllActiveProducts = catchAsync(async(req, res) => {
     const limit = req.query.limit || 20;
     const offset = req.query.offset || 0;
-    let { keyword, categoryId, subcategoryId } = req.query;
-    var where = {};
-    if (keyword && keyword != "undefined") {
-        let keywordsArray = [];
-        keyword = keyword.toLowerCase();
-        keywordsArray.push('%' + keyword + '%');
-        keyword = '%' + capitalize(keyword) + '%';
-        keywordsArray.push(keyword);
-        where = {
-            [Op.or]: [{
-                    name_tm: {
-                        [Op.like]: {
-                            [Op.any]: keywordsArray,
-                        },
-                    },
-                },
-                {
-                    name_ru: {
-                        [Op.like]: {
-                            [Op.any]: keywordsArray,
-                        },
-                    },
-                },
-            ],
-        };
+    let where=getWhere(req.query)
+    const filter=JSON.parse(req.query.filter)
+    const endDate=new Date(filter.endDate)
+    const startDate=new Date(filter.startDate)
+    if(filter.startDate!=undefined){
+        where.push({createdAt:{
+            [Op.gte]: startDate,
+            [Op.lte]: endDate 
+            }
+        })
     }
-
-    if (categoryId) where.categoryId = categoryId;
-    if (subcategoryId) where.subcategoryId = subcategoryId;
-    where.sellerId = req.seller.id
-    const products = await Products.findAll({
+    where.push({sellerId:req.seller.id})
+    
+    const data = await Products.findAll({
         where,
         limit,
         offset,
-        include: {
-            model: Images,
-            as: "images",
-            limit: 4
-        },
+        include: [{
+                model: Images,
+                as: "images",
+                limit: 4
+            },
+            {
+                model: Material,
+                as: "material",
+                
+            },
+            {
+                model: Productsizes,
+                as: "product_sizes"
+            },
+            {
+                model:Seller,
+                as:"seller"
+            }
+        ],
         order: [
-            ['id', 'DESC'],
+            ['updatedAt', 'DESC'],
             // ["images", "id", "DESC"]
         ],
     });
-    const count = await Products.count()
-    return res.status(200).send({ products, count });
+    const count = await Products.count({where})
+    return res.status(200).send({ data, count });
 });
 exports.getOneProduct = catchAsync(async(req, res, next) => {
     const { id } = req.params
     const oneProduct = await Products.findOne({
         where: { id },
-        include: [{
-                model: Productcolor,
-                as: "product_colors",
-                include: [{
-                        model: Images,
-                        as: "product_images"
-                    },
-                    {
-                        model: Productsizes,
-                        as: "product_sizes"
-
-                    }
-                ]
-            },
+        include: [
             {
                 model: Productsizes,
                 as: "product_sizes"
@@ -111,3 +95,50 @@ exports.addProduct = catchAsync(async(req, res, next) => {
     const newProduct = await Products.create(req.body);
     return res.status(201).send(newProduct)
 })
+function getWhere({ categoryId,sizeId,materialId,keyword,welayat}) { 
+    let where = []
+    if (keyword && keyword != "undefined") {
+        let keywordsArray = [];
+        keyword = keyword.toLowerCase();
+        keywordsArray.push('%' + keyword + '%');
+        keyword = '%' + capitalize(keyword) + '%';
+        keywordsArray.push(keyword);
+        where.push({
+            [Op.or]: [{
+                    name_tm: {
+                        [Op.like]: {
+                            [Op.any]: keywordsArray,
+                        },
+                    },
+                },
+                {
+                    name_ru: {
+                        [Op.like]: {
+                            [Op.any]: keywordsArray,
+                        },
+                    },
+                },
+                {
+                    name_en: {
+                        [Op.like]: {
+                            [Op.any]: keywordsArray,
+                        },
+                    },
+                },
+            ],
+        });
+    }
+    if(sizeId && sizeId!="undefined"){
+        where.push({sizeIds:{[Op.contains]:[sizeId]}})
+    }
+    if(categoryId &&categoryId!="undefined"){
+        where.push({categoryId})
+    }
+    if(materialId && materialId!="undefined"){
+        where.push({materialId})
+    }
+    if(welayat&&welayat!="undefined"){
+        where.push({welayat})
+    }
+    return where
+}

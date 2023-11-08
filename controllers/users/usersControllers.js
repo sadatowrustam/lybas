@@ -1,7 +1,7 @@
 const bcrypt = require("bcryptjs");
 const AppError = require('../../utils/appError');
 const catchAsync = require('../../utils/catchAsync');
-const { Users, Products, Images, Likedproducts, Cards } = require('../../models');
+const { Users, Products, Images, Likedproducts, Cards,Productsizes,Sizes } = require('../../models');
 const { createSendToken } = require('./../../utils/createSendToken');
 const { Op } = require("sequelize")
 const sharp = require("sharp")
@@ -67,16 +67,14 @@ exports.deleteMe = catchAsync(async(req, res, next) => {
     res.status(200).send('User Successfully Deleted');
 });
 exports.likeProduct = catchAsync(async(req, res, next) => {
-    console.log(req.body)
-    const product = await Products.findOne({ where: { product_id: req.body.product_id } })
+    const product = await Products.findOne({ where: { id: req.query.id } })
     if (!product) return next(new AppError("Product with that id not found"))
     const liked_product = await Likedproducts.create({ userId: req.user.id, productId: product.id })
     await product.update({ likeCount: product.likeCount + 1 })
     return res.status(200).send({ liked_product, product })
 })
 exports.dislikeProduct = catchAsync(async(req, res, next) => {
-    console.log(req.body)
-    const product = await Products.findOne({ where: { product_id: req.params.id } })
+    const product = await Products.findOne({ where: { id: req.query.id } })
     if (!product) return next(new AppError("Product with that id not found", 404))
     const liked_product = await Likedproducts.findOne({ where: { productId: product.id, userId: req.user.id } })
     if (!liked_product) return next(new AppError("Liked product with that id not found", 404))
@@ -99,20 +97,29 @@ exports.getUsersLikedProducts = catchAsync(async(req, res, next) => {
         ["updatedAt", "DESC"]
     ]
     const liked_product = await Users.findOne({
-        where: { user_id: req.user.user_id },
+        where: { id: req.user.id },
         include: {
             model: Products,
             as: "liked_products",
-            include: {
+            include: [{
                 model: Images,
                 as: "images"
+            }, 
+            {
+                model:Productsizes,
+                as:"product_sizes",
+                include:{
+                    model:Sizes,
+                    as:"size"
+                }
             }
+        ],
         }
     })
     for(let i=0; i<liked_product.liked_products.length;i++){
         liked_product.liked_products[i].isLiked=true
     }
-    return res.status(200).send({ liked_product: liked_product.liked_products })
+    return res.status(200).send({ data: liked_product.liked_products })
 })
 exports.uploadUserImage = catchAsync(async(req, res, next) => {
     const user_id = req.user.user_id;
