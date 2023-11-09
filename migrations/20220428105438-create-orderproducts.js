@@ -4,26 +4,19 @@ module.exports = {
         await queryInterface.createTable('orderproducts', {
             id: {
                 allowNull: false,
-                autoIncrement: true,
                 primaryKey: true,
-                type: DataTypes.INTEGER,
-            },
-            orderproduct_id: {
                 type: DataTypes.UUID,
-                defaultValue: DataTypes.UUIDV4,
+                defaultValue:DataTypes.UUIDV4
             },
             orderId: {
                 type: DataTypes.INTEGER,
             },
-            product_id: {
+            productId: {
                 type: DataTypes.UUID,
-                allowNull: false,
+                
             },
-            product_size_id: {
+            productsizeId: {
                 type: DataTypes.UUID,
-            },
-            product_color_id: {
-                type: DataTypes.UUID
             },
             userId: {
                 type: DataTypes.UUID,
@@ -31,24 +24,24 @@ module.exports = {
             isSelected: {
                 type: DataTypes.BOOLEAN,
             },
-            seller_id: {
+            sellerId: {
                 type: DataTypes.UUID
             },
-            is_ordered: {
+            isOrdered: {
                 type: DataTypes.BOOLEAN,
                 defaultValue: false
             },
             quantity: {
                 type: DataTypes.REAL,
-                allowNull: false,
+                
             },
             price: {
                 type: DataTypes.REAL,
-                allowNull: false,
+                
             },
             total_price: {
                 type: DataTypes.REAL,
-                allowNull: false,
+                
             },
             size: {
                 type: DataTypes.STRING,

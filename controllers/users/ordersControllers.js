@@ -1,127 +1,7 @@
 const AppError = require('../../utils/appError');
 const catchAsync = require('../../utils/catchAsync');
-const { Products, Orders, Orderproducts, Productsizes, Productcolor, Stock, Seller,Images } = require('../../models');
+const { Products, Orders, Orderproducts, Productsizes, Sizes, Material, Seller,Images } = require('../../models');
 const { Op } = require("sequelize")
-// exports.addMyOrders = catchAsync(async(req, res, next) => {
-//     var {
-//         address,
-//         delivery_time,
-//         payment_type,
-//         i_take,
-//         note,
-//         user_phone
-//     } = req.body;
-//     let checkedProducts = [];
-//     let total_price = 0;
-//     let total_quantity = 0;
-//     const order_products = await Orderproducts.findAll({
-//         where: {
-//             [Op.and]: [{ userId: req.user.id }, { is_ordered: false }]
-//         }
-//     })
-//     let new_array = []
-//     for (let i = 0; i < order_products.length; i++) {
-//         if (i == 0) {
-//             const objj = {
-//                 seller_id: order_products[i].seller_id,
-//                 orders: [order_products[i]]
-//             }
-//             new_array.push(objj);
-//         } else {
-//             let bool = true;
-//             for (let j = 0; j < new_array.length; j++) {
-//                 if (new_array[j].seller_id == order_products[i].seller_id) {
-//                     new_array[j].orders.push(order_products[i]);
-//                     bool = false;
-//                     break
-//                 }
-//             }
-//             if (bool) {
-//                 new_array.push({
-//                     seller_id: order_products[i].seller_id,
-//                     orders: [order_products[i]]
-//                 })
-//             }
-//         }
-//     }
-//     let orders_array = []
-//     if (order_products.length == 0) return next(new AppError("Select products to order", 400))
-//     for (let i = 0; i < new_array.length; i++) {
-//         let order_products = new_array[i].orders
-//         for (var j = 0; j < order_products.length; j++) {
-//             if (order_products[j].product_size_id != null) {
-//                 var product_size = await Productsizes.findOne({ where: { product_size_id: order_products[j].product_size_id }, include: { model: Stock, as: "product_size_stock" } })
-//             }
-//             var product = await Products.findOne({
-//                 where: { product_id: order_products[j].product_id },
-//                 include: {
-//                     model: Stock,
-//                     as: "product_stock"
-//                 }
-//             });
-//             if (product_size) {
-//                 if (product_size.product_size_stock.quantity < order_products[j].quantity) {
-//                     order_products[j].quantity = product_size.product_size_stock.quantity
-//                 }
-//                 checkedProducts.push(product_size);
-//                 order_products[j].total_price = product_size.price * order_products[j].quantity
-//             } else if (product) {
-//                 if (product.product_stock[0].quantity < order_products[j].quantity) {
-//                     order_products[j].quantity = product.product_stock[0].quantity
-//                 }
-//                 order_products[j].total_price = product.price * order_products[j].quantity
-//                 checkedProducts.push(product);
-//             }
-//             total_quantity = total_quantity + order_products[j].quantity;
-//             total_price = total_price + order_products[j].total_price;
-//         }
-//         let sellerId = null
-//         if (new_array[i].seller_id) {
-//             var seller = await Seller.findOne({ seller_id: new_array[i].seller_id })
-//             sellerId = seller.id
-//         }
-//         const order = await Orders.create({
-//             userId: req.user.id,
-//             total_price,
-//             address,
-//             user_name: req.user.username,
-//             user_phone,
-//             payment_type,
-//             i_take,
-//             note,
-//             sellerId,
-//             status: "waiting",
-//             delivery_time,
-//             total_quantity,
-//         });
-//         orders_array.push(order)
-//         for (var x = 0; x < order_products.length; x++) {
-//             console.log(98, order_products)
-//             await Orderproducts.update({
-//                 orderId: order.id,
-//                 quantity: order_products[x].quantity,
-//                 price: checkedProducts[x].price,
-//                 total_price: order_products[x].total_price,
-//                 is_ordered: true,
-//                 is_selected: false,
-//                 status: "waiting"
-//             }, {
-//                 where: {
-//                     orderproduct_id: order_products[x].orderproduct_id,
-//                     userId: req.user.id
-//                 }
-//             });
-
-//         }
-//     }
-
-//     return res.status(200).json({
-//         status: 'Your orders accepted and will be delivered as soon as possible',
-//         data: {
-//             orders_array,
-//         },
-//     });
-// })
 exports.addMyOrders = catchAsync(async(req, res, next) => {
     var {
         address,
@@ -129,36 +9,30 @@ exports.addMyOrders = catchAsync(async(req, res, next) => {
         i_take,
         note,
         user_phone,
-        seller_id
     } = req.body;
     let checkedProducts = [];
     let total_price = 0;
     let total_quantity = 0;
-    let where= {[Op.and]: [{ userId: req.user.id }, { is_ordered: false },{isSelected:true}]}
-    if(seller_id) where.seller_id=sellerId
+    let where= {[Op.and]: [{ userId: req.user.id }, { is_ordered: false }]}
     const order_products = await Orderproducts.findAll({where})
     let orders_array = []
-    if (order_products.length == 0) return next(new AppError("Select products to order", 400))
+    if (order_products.length == 0) return next(new AppError("Nothing to order", 400))
     for (var j = 0; j < order_products.length; j++) {
         if (order_products[j].product_size_id != null) {
-            var product_size = await Productsizes.findOne({ where: { product_size_id: order_products[j].product_size_id }, include: { model: Stock, as: "product_size_stock" } })
+            var product_size = await Productsizes.findOne({ where: { productId: order_products[j].productsizeId }})
         }
         var product = await Products.findOne({
-            where: { product_id: order_products[j].product_id },
-            include: {
-                model: Stock,
-                as: "product_stock"
-            }
+            where: { id: order_products[j].productId },
         });
         if (product_size) {
-            if (product_size.product_size_stock.quantity < order_products[j].quantity) {
-                order_products[j].quantity = product_size.product_size_stock.quantity
+            if (product_size.stock < order_products[j].quantity) {
+                order_products[j].quantity = product_size.stock
             }
             checkedProducts.push(product_size);
             order_products[j].total_price = product_size.price * order_products[j].quantity
         } else if (product) {
             if (product.product_stock[0].quantity < order_products[j].quantity) {
-                order_products[j].quantity = product.product_stock[0].quantity
+                order_products[j].quantity = product.stock
             }
             order_products[j].total_price = product.price * order_products[j].quantity
             checkedProducts.push(product);
@@ -166,23 +40,15 @@ exports.addMyOrders = catchAsync(async(req, res, next) => {
         total_quantity = total_quantity + order_products[j].quantity;
         total_price = total_price + order_products[j].total_price;
     }
-        let sellerId = null
-        if (order_products[0].seller_id) {
-            var seller = await Seller.findOne({ seller_id: new_array[i].seller_id })
-            sellerId = seller.id
-        }
         const order = await Orders.create({
             userId: req.user.id,
             total_price,
             address,
-            user_name: req.body.name,
+            user_name: req.user.username,
             user_phone,
             payment_type,
-            i_take,
             note,
-            sellerId,
             status: "Garashylyar",
-            delivery_time:"9:00",
             total_quantity,
         });
         orders_array.push(order)
@@ -193,13 +59,11 @@ exports.addMyOrders = catchAsync(async(req, res, next) => {
                 price: checkedProducts[x].price,
                 total_price: order_products[x].total_price,
                 is_ordered: true,
-                is_selected: false,
                 status: "Garashylyar"
             }, {
                 where: {
                     orderproduct_id: order_products[x].orderproduct_id,
-                    userId: req.user.id
-                }
+                    }
             });
 
         }
@@ -210,6 +74,49 @@ exports.addMyOrders = catchAsync(async(req, res, next) => {
             orders_array,
         },
     });
+})
+exports.addInstantOrder=catchAsync(async(req,res,next)=>{
+    const { id, productsizeId, quantity,address,user_phone,payment_type,note } = req.body;
+    const order_product=await Orderproducts.findOne({where:{productsizeId,userId:req.user.id,isOrdered:false}})
+    if(!order_product){
+        order_product=await Orderproducts.create()
+    }
+    var orderProductData = {}
+    let product = await Products.findOne({
+        where: { id },
+        include: [
+            { model: Images, as: "images" },
+            { model: Seller, as: "seller" }
+        ]
+    })
+    if (!product) return next(new AppError("Product not found with that id", 404))
+    let productsize = await Productsizes.findOne({where: { id:productsizeId }})
+    if (!productsize) return next(new AppError("Size with that id not found"))
+        orderProductData.price = productsize.price
+        orderProductData.image = product.images[0].image
+        orderProductData.productsizeId = productsize.id
+        orderProductData.quantity = quantity
+        orderProductData.total_price = quantity * productsize.price
+        orderProductData.productId = product.id
+    
+    if (product.seller) orderProductData.sellerId = product.sellerId
+
+    orderProductData.userId = req.user.id
+    orderProductData.is_ordered = true
+    const order = await Orders.create({
+        userId: req.user.id,
+        total_price:orderProductData.total_price,
+        address,
+        user_name: req.user.username,
+        user_phone,
+        payment_type,
+        note,
+        status: "Garashylyar",
+        total_quantity:orderProductData.quantity,
+    });
+    orderProductData.orderId=order.id
+    await order_product.update(orderProductData)
+    return res.status(201).send(order_product)
 })
 exports.getMyOrders = catchAsync(async(req, res, next) => {
     const limit = req.query.limit || 20;
@@ -378,86 +285,66 @@ exports.getMyOrderProducts = catchAsync(async(req, res, next) => {
     res.status(200).send({ orderProducts });
 });
 exports.getNotOrderedProducts = catchAsync(async(req, res, next) => {
-    const limit = req.query.limit || 20
-    const offset = req.query.offset || 0
     let where={}
     where.userId=req.user.id
-    where.is_ordered=false
-    if(req.query.isSelected) where.isSelected=req.query.isSelected 
-    const order_products = await Orderproducts.findAll({ where, limit, offset })
+    where.isOrdered=false
+    const order_products = await Orderproducts.findAll({ where })
     const checked_products = []
     for (var i = 0; i < order_products.length; i++) {
         const product = await Products.findOne({
-            where: { product_id: order_products[i].product_id },
+            where: { id: order_products[i].productId },
             include:[{
                 model:Productsizes,
-                as:"product_sizes"
+                as:"product_sizes",
+                include:{
+                    model:Sizes,
+                    as:"size"
+                }
             },
             {
-                model:Seller,
-                as:"seller"
+                model:Material,
+                as:"material"
             },
             {
-                model:Productcolor,
-                as:"product_colors",
-                include:[{
-                    model:Productsizes,
-                    as:"product_sizes"
-                },
-                {
-                    model:Images,
-                    as:"product_images"
-                },
-            ]
+                model:Images,
+                as:"images",
+                limit:1
             }
         ],
         });
         if (!product) continue
         const {
-            product_id,
+            id,
             name_tm,
             name_ru,
-            body_tm,
-            body_ru
-        } = product;
-        if (order_products[i].product_size_id != null) {
-            var product_size = await Productsizes.findOne({ where: { product_size_id: order_products[i].product_size_id } })
-        }
-        // if (order_products[i].product_color_id != null) {
-        //     var product_color = await Productcolor.findAll({ where: { product_color_id: order_products.product_color_id },
-        //         include:[
-        //         {
-        //             model:Productsizes,
-        //             as:"product_sizes"
-        //         },
-        //         {
-        //             model:Images,
-        //             as:"images"
-        //         }] 
-        //         })
-        // }
-        const obj = {
-            orderproduct_id: order_products[i].orderproduct_id,
-            product_id,
-            name_tm,
-            name_ru,
+            name_en,
+            body_en,
             body_tm,
             body_ru,
-            image: order_products[i].image,
-            quantity: order_products[i].quantity,
-            isSelected: order_products[i].isSelected,
-            seller_id: order_products[i].seller_id,
-        };
-        if(product.product_colors.length!=0){
-            obj.product_color=product.product_colors
+            material
+        } = product;
+        if (order_products[i].productsizeId != null) {
+            var product_size = await Productsizes.findOne({ where: { id: order_products[i].productsizeId },include:{model:Sizes,as:"size"} })
         }
+        let obj = {
+            orderproduct_id: order_products[i].orderproduct_id,
+            productId:id,
+            name_tm,
+            name_ru,
+            name_en,
+            body_en,
+            body_tm,
+            body_ru,
+            image: product.images[0].image,
+            quantity: order_products[i].quantity,
+            material,
+        };
         if (product_size) {
-            obj.size = product_size.size
+            obj.size = product_size.size.size
             obj.price = product_size.price
             obj.price_old = product_size.price_old
             obj.total_price = product_size.price * order_products[i].quantity
-            obj.product_size_id = product_size.product_size_id
-            obj.productsizes=product.product_sizes
+            obj.productsizeId = product_size.productsizeId
         } else if (product) {
             obj.price = product.price
             obj.price_old = product.price_old
@@ -465,36 +352,36 @@ exports.getNotOrderedProducts = catchAsync(async(req, res, next) => {
         }
         checked_products.push(obj);
     }
-    let new_array = []
-    for (let i = 0; i < order_products.length; i++) {
-        if (i == 0) {
-            const seller=await Seller.findOne({where:{seller_id: order_products[i].seller_id}})
-            const objj = {
-                seller_id: order_products[i].seller_id,
-                orders: [order_products[i]],
-                seller
-            }
-            new_array.push(objj);
-        } else {
-            let bool = true;
-            for (let j = 0; j < new_array.length; j++) {
-                if (new_array[j].seller_id == order_products[i].seller_id) {
-                    new_array[j].orders.push(order_products[i]);
-                    bool = false;
-                    break
-                }
-            }
-            if (bool) {
-            const seller=await Seller.findOne({where:{seller_id: order_products[i].seller_id}})
-                new_array.push({
-                    seller_id: order_products[i].seller_id,
-                    orders: [order_products[i]],
-                    seller
-                })
-            }
-        }
-    }
-    return res.status(200).send({ not_ordered_products: new_array })
+    // let new_array = []
+    // for (let i = 0; i < order_products.length; i++) {
+    //     if (i == 0) {
+    //         const seller=await Seller.findOne({where:{seller_id: order_products[i].seller_id}})
+    //         const objj = {
+    //             seller_id: order_products[i].seller_id,
+    //             orders: [order_products[i]],
+    //             seller
+    //         }
+    //         new_array.push(objj);
+    //     } else {
+    //         let bool = true;
+    //         for (let j = 0; j < new_array.length; j++) {
+    //             if (new_array[j].seller_id == order_products[i].seller_id) {
+    //                 new_array[j].orders.push(order_products[i]);
+    //                 bool = false;
+    //                 break
+    //             }
+    //         }
+    //         if (bool) {
+    //         const seller=await Seller.findOne({where:{seller_id: order_products[i].seller_id}})
+    //             new_array.push({
+    //                 seller_id: order_products[i].seller_id,
+    //                 orders: [order_products[i]],
+    //                 seller
+    //             })
+    //         }
+    //     }
+    // }
+    return res.status(200).send({ data:checked_products})
 })
 exports.deleteOrderedProduct = catchAsync(async(req, res, next) => {
     const { orderproduct_ids } = req.body

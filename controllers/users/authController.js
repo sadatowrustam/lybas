@@ -21,7 +21,7 @@ exports.verify_code = catchAsync(async(req, res, next) => {
         const obj = {
             code: generated_code,
             number: user_phone,
-            sms: 'Lybas tassyklaýyş koduňyz: '+code,
+            sms: 'Lybas tassyklaýyş koduňyz: '+generated_code,
         };
         var io = req.app.get('socketio');
         io.emit("verification-phone", obj)

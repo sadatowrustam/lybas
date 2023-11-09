@@ -9,7 +9,7 @@ const {
 } = require('../../../controllers/users/ordersControllers');
 
 router.post('/add', addMyOrders);
-
+router.post("/instant-order")
 router.get('/', getMyOrders);
 router.delete("/", deleteOrderedProduct)
 router.delete("/all", deleteAllOrderedProducts)

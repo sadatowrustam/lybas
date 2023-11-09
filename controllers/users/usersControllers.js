@@ -1,7 +1,7 @@
 const bcrypt = require("bcryptjs");
 const AppError = require('../../utils/appError');
 const catchAsync = require('../../utils/catchAsync');
-const { Users, Products, Images, Likedproducts, Cards,Productsizes,Sizes } = require('../../models');
+const { Users, Products, Images, Likedproducts,Productsizes,Sizes } = require('../../models');
 const { createSendToken } = require('./../../utils/createSendToken');
 const { Op } = require("sequelize")
 const sharp = require("sharp")
@@ -38,22 +38,18 @@ exports.updateMyPassword = catchAsync(async(req, res, next) => {
 
 exports.updateMe = catchAsync(async(req, res, next) => {
     console.log(req.body)
-    const { username, nickname, } = req.body;
-    if (!username || !nickname)
+    const {  password,username } = req.body;
+    if (!username)
         return next(new AppError('Invalid credentials', 400));
 
-    const user = await Users.findOne({ where: { user_id: [req.user.user_id] } });
-
-    const has_username = await Users.findOne({ where: { nickname } })
-
-    if (has_username) {
-        if (has_username.user_id != req.user.user_id) return next(new AppError("This nickname is already taken"))
+    const user = await Users.findOne({ where: { id: [req.user.id] } });
+    if(password){
+        let newPassword = await bcrypt.hash(password, 12);
+        await user.update({password:newPassword})
     }
     await user.update({
         username,
-        nickname
     });
-    console.log(user)
     createSendToken(user, 200, res);
 });
 
@@ -61,7 +57,6 @@ exports.deleteMe = catchAsync(async(req, res, next) => {
     if (req.body.user_phone != req.user.user_phone) {
         return next(new AppError('Phone number is not correct', 400));
     }
-
     await Users.destroy({ where: { user_phone: req.user.user_phone } });
 
     res.status(200).send('User Successfully Deleted');
@@ -122,12 +117,12 @@ exports.getUsersLikedProducts = catchAsync(async(req, res, next) => {
     return res.status(200).send({ data: liked_product.liked_products })
 })
 exports.uploadUserImage = catchAsync(async(req, res, next) => {
-    const user_id = req.user.user_id;
-    const user = await Users.findOne({ where: { user_id } });
+    const id = req.user.id;
+    const user = await Users.findOne({ where: { id } });
     req.files = Object.values(req.files)
     if (!user)
         return next(new AppError('User did not found with that ID', 404));
-    const image = `${user_id}_user.webp`;
+    const image = `${id}_user.webp`;
     const photo = req.files[0].data
     let buffer = await sharp(photo).webp().toBuffer()
     await sharp(buffer).toFile(`static/${image}`);
@@ -137,14 +132,3 @@ exports.uploadUserImage = catchAsync(async(req, res, next) => {
     return res.status(201).send(user)
 
 });
-exports.createCard = catchAsync(async(req, res, next) => {
-    // const CryptoJS = require("crypto-js")
-    // var ciphertext = CryptoJS.AES.encrypt('my message is bet', 'secret key 123').toString();
-    // console.log(ciphertext)
-    //  var bytes = CryptoJS.AES.decrypt(ciphertext, 'secret key 123');
-    //  var originalText = bytes.toString(CryptoJS.enc.Utf8);
-    // console.log(originalText)
-    const { card_number } = req.body
-    const card = await Cards.create({ card_number, userId: req.user.id })
-    return res.status(200).send({ card })
-})

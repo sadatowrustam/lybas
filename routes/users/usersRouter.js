@@ -36,15 +36,12 @@ router.patch('/update-me', protect, updateMe);
 router.delete('/delete-me', protect, deleteMe);
 router.post("/upload-image", protect, uploadUserImage)
 router.patch('/update-my-password', protect, updateMyPassword);
-router.get('/my-cart', protect, getMyCart);
 router.post("/to-my-cart", protect, addMyCart)
+
 router.get("/is-ordered", protect, isOrdered)
-router.patch("/my-cart/select/all", protect,selectAll)
-router.patch("/my-cart/select/:id", protect, select)
 router.patch("/my-cart/:id", protect, updateProduct)
 router.get("/not-ordered", protect, getNotOrderedProducts)
 router.delete("/not-ordered/:id", protect, deleteProduct)
-router.delete("/not-ordered/multiple/", protect, deleteSelected)
 router.get("/like", protect, getUsersLikedProducts)
 router.post("/like", protect, likeProduct) 
 router.post("/dislike",protect,dislikeProduct)

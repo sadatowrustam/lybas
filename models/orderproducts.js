@@ -10,40 +10,44 @@ module.exports = (sequelize, DataTypes) => {
         }
     }
     Orderproducts.init({
+        id: {
+            allowNull: false,
+            primaryKey: true,
+            type: DataTypes.UUID,
+            defaultValue:DataTypes.UUIDV4
+        },
         productId: {
             type: DataTypes.UUID,
-            allowNull: false,
         },
         productsizeId: {
             type: DataTypes.UUID,
         },
         userId: {
             type: DataTypes.UUID,
-            // allowNull: false
+        
         },
         quantity: {
             type: DataTypes.REAL,
-            allowNull: false,
         },
         price: {
             type: DataTypes.REAL,
-            allowNull: false,
         },
         total_price: {
             type: DataTypes.REAL,
-            allowNull: false,
         },
         image: {
             type: DataTypes.STRING,
-            allowNull: false
         },
-        is_ordered: {
+        isOrdered: {
             type: DataTypes.BOOLEAN,
             defaultValue: false
         },
         status: {
             type: DataTypes.STRING,
             defaultValue: "not"
+        },
+        sellerId:{
+            type:DataTypes.UUID
         },
         size: {
             type: DataTypes.STRING,
