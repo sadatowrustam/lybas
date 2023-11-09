@@ -12,7 +12,8 @@ const {
     Material,
     Images,
     Productsizes,
-    Seller
+    Seller,
+    Sizes
 } = require('../../models');
 const capitalize = function(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -71,6 +72,10 @@ exports.getOneProduct = catchAsync(async(req, res, next) => {
             {
                 model: Productsizes,
                 as: "product_sizes",
+                include:{
+                    model:Sizes,
+                    as:"size"
+                }
             },
             {
                 model: Images,
@@ -96,13 +101,13 @@ exports.addSize = catchAsync(async(req, res, next) => {
         let data = {}
         data.price_old = null;
         if (req.body.sizes[i].discount > 0) {
-            // data.discount = req.body.sizes[i].discount
+            data.discount = req.body.sizes[i].discount
             data.price_old = req.body.sizes[i].price
             req.body.sizes[i].price = (data.price_old / 100) * (100 - req.body.sizes[i].discount)
         }
-        // data.price = req.body.sizes[i].price
-        data.sizeId = req.body.sizes[i]
-        // data.discount=req.body.sizes[i].discount
+        data.price = req.body.sizes[i].price
+        data.sizeId = req.body.sizes[i].sizeId
+        data.discount=req.body.sizes[i].discount
         data.productId = product.id
         data.stock = req.body.sizes[i].stock
         console.log(data)
@@ -110,7 +115,6 @@ exports.addSize = catchAsync(async(req, res, next) => {
         sizeIds.push(data.sizeId)
         sizes.push(product_size)
     }
-    console.log(sizeIds)
     await product.update({sizeIds})
 
     return res.status(201).send(sizes)
