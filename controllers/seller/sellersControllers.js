@@ -34,6 +34,7 @@ exports.getMe = catchAsync(async(req, res, next) => {
 });
 exports.login = catchAsync(async(req, res, next) => {
     const { phone_number, password } = req.body;
+    console.log(req.body)
     if (!phone_number || !password) {
         return next(new AppError('Please provide name and  password', 400));
     }

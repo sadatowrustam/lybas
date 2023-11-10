@@ -9,7 +9,7 @@ module.exports = {
                 defaultValue:DataTypes.UUIDV4
             },
             orderId: {
-                type: DataTypes.INTEGER,
+                type: DataTypes.UUID,
             },
             productId: {
                 type: DataTypes.UUID,

@@ -5,11 +5,12 @@ const {
     addMyOrders,
     getMyOrders,
     deleteOrderedProduct,
-    deleteAllOrderedProducts
+    deleteAllOrderedProducts,
+    addInstantOrder
 } = require('../../../controllers/users/ordersControllers');
 
 router.post('/add', addMyOrders);
-router.post("/instant-order")
+router.post("/instant-order",addInstantOrder)
 router.get('/', getMyOrders);
 router.delete("/", deleteOrderedProduct)
 router.delete("/all", deleteAllOrderedProducts)

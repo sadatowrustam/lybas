@@ -4,6 +4,7 @@ const { Products, Orderproducts,  Productsizes, Images, Seller } = require('../.
 const { Op } = require("sequelize")
 exports.addMyCart = catchAsync(async(req, res, next) => {
     const { id, productsizeId, quantity } = req.body;
+    console.log(req.body)
     let order_product=await Orderproducts.findOne({where:{productsizeId,userId:req.user.id,isOrdered:false}})
     if(!order_product){
         order_product=await Orderproducts.create()

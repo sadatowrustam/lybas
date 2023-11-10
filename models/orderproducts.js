@@ -7,6 +7,7 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "userId",
                 as: "user"
             })
+            this.belongsTo(Orders,{as:"order",foreignKey:"orderId"})
         }
     }
     Orderproducts.init({
@@ -18,6 +19,9 @@ module.exports = (sequelize, DataTypes) => {
         },
         productId: {
             type: DataTypes.UUID,
+        },
+        orderId:{
+            type:DataTypes.UUID
         },
         productsizeId: {
             type: DataTypes.UUID,

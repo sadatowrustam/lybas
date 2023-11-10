@@ -4,16 +4,16 @@ const { Products, Orders, Orderproducts, Productsizes, Sizes, Material, Seller,I
 const { Op } = require("sequelize")
 exports.addMyOrders = catchAsync(async(req, res, next) => {
     var {
+        username,
         address,
-        payment_type,
-        i_take,
         note,
         user_phone,
+        name,surname
     } = req.body;
     let checkedProducts = [];
     let total_price = 0;
     let total_quantity = 0;
-    let where= {[Op.and]: [{ userId: req.user.id }, { is_ordered: false }]}
+    let where= {[Op.and]: [{ userId: req.user.id }, { isOrdered: false }]}
     const order_products = await Orderproducts.findAll({where})
     let orders_array = []
     if (order_products.length == 0) return next(new AppError("Nothing to order", 400))
@@ -31,7 +31,7 @@ exports.addMyOrders = catchAsync(async(req, res, next) => {
             checkedProducts.push(product_size);
             order_products[j].total_price = product_size.price * order_products[j].quantity
         } else if (product) {
-            if (product.product_stock[0].quantity < order_products[j].quantity) {
+            if (product.stock < order_products[j].quantity) {
                 order_products[j].quantity = product.stock
             }
             order_products[j].total_price = product.price * order_products[j].quantity
@@ -40,16 +40,17 @@ exports.addMyOrders = catchAsync(async(req, res, next) => {
         total_quantity = total_quantity + order_products[j].quantity;
         total_price = total_price + order_products[j].total_price;
     }
+        console.log(req.body)
         const order = await Orders.create({
             userId: req.user.id,
             total_price,
             address,
-            user_name: req.user.username,
+            user_name: name+surname,
             user_phone,
-            payment_type,
             note,
             status: "Garashylyar",
             total_quantity,
+            address
         });
         orders_array.push(order)
         for (var x = 0; x < order_products.length; x++) {
@@ -58,11 +59,11 @@ exports.addMyOrders = catchAsync(async(req, res, next) => {
                 quantity: order_products[x].quantity,
                 price: checkedProducts[x].price,
                 total_price: order_products[x].total_price,
-                is_ordered: true,
+                isOrdered: true,
                 status: "Garashylyar"
             }, {
                 where: {
-                    orderproduct_id: order_products[x].orderproduct_id,
+                    id: order_products[x].id,
                     }
             });
 
@@ -76,8 +77,8 @@ exports.addMyOrders = catchAsync(async(req, res, next) => {
     });
 })
 exports.addInstantOrder=catchAsync(async(req,res,next)=>{
-    const { id, productsizeId, quantity,address,user_phone,payment_type,note } = req.body;
-    const order_product=await Orderproducts.findOne({where:{productsizeId,userId:req.user.id,isOrdered:false}})
+    const { id, productsizeId, quantity,address,user_phone,note } = req.body;
+    let order_product=await Orderproducts.findOne({where:{productsizeId,userId:req.user.id,isOrdered:false}})
     if(!order_product){
         order_product=await Orderproducts.create()
     }
@@ -102,14 +103,13 @@ exports.addInstantOrder=catchAsync(async(req,res,next)=>{
     if (product.seller) orderProductData.sellerId = product.sellerId
 
     orderProductData.userId = req.user.id
-    orderProductData.is_ordered = true
+    orderProductData.isOrdered = true
     const order = await Orders.create({
         userId: req.user.id,
         total_price:orderProductData.total_price,
         address,
         user_name: req.user.username,
         user_phone,
-        payment_type,
         note,
         status: "Garashylyar",
         total_quantity:orderProductData.quantity,
@@ -288,7 +288,7 @@ exports.getNotOrderedProducts = catchAsync(async(req, res, next) => {
     let where={}
     where.userId=req.user.id
     where.isOrdered=false
-    const order_products = await Orderproducts.findAll({ where })
+    const order_products = await Orderproducts.findAll({ where ,order:[["createdAt","DESC"]]})
     const checked_products = []
     for (var i = 0; i < order_products.length; i++) {
         const product = await Products.findOne({
@@ -311,6 +311,7 @@ exports.getNotOrderedProducts = catchAsync(async(req, res, next) => {
                 limit:1
             }
         ],
+        
         });
         if (!product) continue
         const {
@@ -327,7 +328,7 @@ exports.getNotOrderedProducts = catchAsync(async(req, res, next) => {
             var product_size = await Productsizes.findOne({ where: { id: order_products[i].productsizeId },include:{model:Sizes,as:"size"} })
         }
         let obj = {
-            orderproduct_id: order_products[i].orderproduct_id,
+            orderproductId: order_products[i].id,
             productId:id,
             name_tm,
             name_ru,
@@ -335,6 +336,7 @@ exports.getNotOrderedProducts = catchAsync(async(req, res, next) => {
             body_en,
             body_tm,
             body_ru,
+            productsizeId:product_size.id,
             image: product.images[0].image,
             quantity: order_products[i].quantity,
             material,
@@ -344,7 +346,6 @@ exports.getNotOrderedProducts = catchAsync(async(req, res, next) => {
             obj.price = product_size.price
             obj.price_old = product_size.price_old
             obj.total_price = product_size.price * order_products[i].quantity
-            obj.productsizeId = product_size.productsizeId
         } else if (product) {
             obj.price = product.price
             obj.price_old = product.price_old
@@ -352,35 +353,6 @@ exports.getNotOrderedProducts = catchAsync(async(req, res, next) => {
         }
         checked_products.push(obj);
     }
-    // let new_array = []
-    // for (let i = 0; i < order_products.length; i++) {
-    //     if (i == 0) {
-    //         const seller=await Seller.findOne({where:{seller_id: order_products[i].seller_id}})
-    //         const objj = {
-    //             seller_id: order_products[i].seller_id,
-    //             orders: [order_products[i]],
-    //             seller
-    //         }
-    //         new_array.push(objj);
-    //     } else {
-    //         let bool = true;
-    //         for (let j = 0; j < new_array.length; j++) {
-    //             if (new_array[j].seller_id == order_products[i].seller_id) {
-    //                 new_array[j].orders.push(order_products[i]);
-    //                 bool = false;
-    //                 break
-    //             }
-    //         }
-    //         if (bool) {
-    //         const seller=await Seller.findOne({where:{seller_id: order_products[i].seller_id}})
-    //             new_array.push({
-    //                 seller_id: order_products[i].seller_id,
-    //                 orders: [order_products[i]],
-    //                 seller
-    //             })
-    //         }
-    //     }
-    // }
     return res.status(200).send({ data:checked_products})
 })
 exports.deleteOrderedProduct = catchAsync(async(req, res, next) => {
