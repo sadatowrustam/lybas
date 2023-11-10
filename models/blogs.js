@@ -14,6 +14,12 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Blogs.init({
+    id: {
+      allowNull: false,
+      primaryKey: true,
+      type: DataTypes.UUID,
+      defaultValue:DataTypes.UUIDV4
+    },
     header_tm: DataTypes.STRING,
     header_ru: DataTypes.STRING,
     header_en: DataTypes.STRING,

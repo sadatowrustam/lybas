@@ -21,6 +21,9 @@ module.exports = {
             userId: {
                 type: DataTypes.UUID,
             },
+            materialId: {
+                type: DataTypes.UUID,
+            },
             isSelected: {
                 type: DataTypes.BOOLEAN,
             },

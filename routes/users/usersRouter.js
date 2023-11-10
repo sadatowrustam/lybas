@@ -19,6 +19,9 @@ const {
     getUsersLikedProducts,
     uploadUserImage,
     createCard,
+    getNotifications,
+    subscribeToNews,
+    deliverAbroad,
 } = require('../../controllers/users/usersControllers');
 const router = express.Router();
 router.use("/products", protect, require("./routes/productsRouter"))
@@ -37,7 +40,6 @@ router.delete('/delete-me', protect, deleteMe);
 router.post("/upload-image", protect, uploadUserImage)
 router.patch('/update-my-password', protect, updateMyPassword);
 router.post("/to-my-cart", protect, addMyCart)
-
 router.get("/is-ordered", protect, isOrdered)
 router.patch("/my-cart/:id", protect, updateProduct)
 router.get("/not-ordered", protect, getNotOrderedProducts)
@@ -45,4 +47,7 @@ router.post("/delete/not-ordered/:id", protect, deleteProduct)
 router.get("/like", protect, getUsersLikedProducts)
 router.post("/like", protect, likeProduct) 
 router.post("/dislike",protect,dislikeProduct)
+router.get("notification",protect,getNotifications)
+router.post("/newsletter",subscribeToNews)
+router.post("/delivery",deliverAbroad)
 module.exports = router;

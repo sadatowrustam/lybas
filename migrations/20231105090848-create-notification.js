@@ -5,6 +5,7 @@ module.exports = {
     await queryInterface.createTable('notifications', {
       id: {
         allowNull: false,
+        primaryKey: true,
         type: DataTypes.UUID,
         defaultValue:DataTypes.UUIDV4
       },
@@ -14,7 +15,7 @@ module.exports = {
       text: {
         type: DataTypes.TEXT
       },
-      text: {
+      name: {
         type: DataTypes.TEXT
       },
       count: {
@@ -22,6 +23,9 @@ module.exports = {
       },
       type: {
         type: DataTypes.STRING
+      },
+      isRead:{
+        type:DataTypes.BOOLEAN,
       },
       createdAt: {
         allowNull: false,

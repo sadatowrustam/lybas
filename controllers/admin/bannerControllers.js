@@ -27,7 +27,6 @@ exports.uploadImages=catchAsync(async(req,res,next)=>{
         const photo = images.data
         let buffer = await sharp(photo).webp().toBuffer()
         await sharp(buffer).toFile(`static/${image}`);
-        console.log(image)
         // await blogs.update({image})
     }
     return res.status(201).send(image);

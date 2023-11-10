@@ -12,7 +12,7 @@ const {
 router.post('/add', addMyOrders);
 router.post("/instant-order",addInstantOrder)
 router.get('/', getMyOrders);
-router.delete("/", deleteOrderedProduct)
+router.post("/delete-product", deleteOrderedProduct)
 router.delete("/all", deleteAllOrderedProducts)
 
 module.exports = router

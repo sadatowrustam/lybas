@@ -29,6 +29,7 @@ exports.addMyCart = catchAsync(async(req, res, next) => {
         orderProductData.quantity = quantity
         orderProductData.total_price = quantity * productsize.price
         orderProductData.productId = product.id
+        orderProductData.materialId= product.materialId
     }
     if (product.seller) orderProductData.sellerId = product.sellerId
 

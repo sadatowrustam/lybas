@@ -9,14 +9,23 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Notification.init({
+    id: {
+      allowNull: false,
+      primaryKey: true,
+      type: DataTypes.UUID,
+      defaultValue:DataTypes.UUIDV4
+    },
     userId: DataTypes.UUID,
     name:DataTypes.TEXT,
     text: DataTypes.TEXT,
     count: DataTypes.INTEGER,
-    type: DataTypes.STRING
+    type: DataTypes.STRING,
+    isRead:{
+      type:DataTypes.BOOLEAN,
+    },
   }, {
     sequelize,
-    tableName:"notifactions",
+    tableName:"notifications",
     modelName: 'Notification',
   });
   return Notification;

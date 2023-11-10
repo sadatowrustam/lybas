@@ -2,12 +2,14 @@
 const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class Orderproducts extends Model {
-        static associate({ Orders, Users }) {
+        static associate({ Orders, Users,Material,Products }) {
             this.belongsTo(Users, {
                 foreignKey: "userId",
                 as: "user"
             })
             this.belongsTo(Orders,{as:"order",foreignKey:"orderId"})
+            this.belongsTo(Material,{as:"material",foreignKey:"materialId"})
+            this.belongsTo(Products,{as:"product",foreignKey:"productId"})
         }
     }
     Orderproducts.init({
@@ -28,7 +30,9 @@ module.exports = (sequelize, DataTypes) => {
         },
         userId: {
             type: DataTypes.UUID,
-        
+        },
+        materialId: {
+            type: DataTypes.UUID,
         },
         quantity: {
             type: DataTypes.REAL,

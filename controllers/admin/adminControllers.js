@@ -1,10 +1,10 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { promisify } = require('util');
 const AppError = require('../../utils/appError');
 const catchAsync = require('../../utils/catchAsync');
 const { Admin, Products } = require('../../models');
 const fs = require("fs")
+const sharp=require("sharp")
 const { Op } = require("sequelize")
 const signToken = (id) => {
     return jwt.sign({ id }, 'rustam', {
@@ -75,7 +75,8 @@ exports.sendMe = catchAsync(async(req, res, next) => {
     return res.status(200).send(req.admin)
 })
 exports.updateMe = catchAsync(async(req, res, next) => {
-    const { username, password, newPassword, newPasswordConfirm,email } = req.body;
+    console.log(req.body)
+    let { username, newPassword, email,welayat,login,user_phone,image } = req.body;
 
     if (!username) {
         return next(new AppError('Please provide username and  password', 400));
@@ -83,23 +84,19 @@ exports.updateMe = catchAsync(async(req, res, next) => {
 
     const admin = await Admin.findOne();
 
-    if (password && newPassword) {
-        if (!(await bcrypt.compare(password, admin.password))) {
-            return next(new AppError('Your current password is not correct', 401));
-        }
-
-        if (newPassword !== newPasswordConfirm) {
-            return next(new AppError('New passwords are not the same', 400));
-        }
-
+    if (newPassword) {
         await admin.update({
             password: await bcrypt.hash(newPassword, 12),
         });
     }
-
+    if (typeof image!="string") image=""
     admin.update({
         username,
-        email
+        email,
+        welayat,
+        login,
+        user_phone,
+        image
     });
 
     createSendToken(admin, 200, res);
@@ -148,3 +145,20 @@ exports.getTime = catchAsync(async(req, res, next) => {
     var expiration_days = fs.readFileSync('config/expire_time.txt', 'utf8')
     return res.status(200).send({ day: Number(expiration_days) })
 })
+exports.uploadAdminImage=catchAsync(async(req,res,next)=>{
+    req.files = Object.values(req.files)
+    req.files = intoArray(req.files)
+    const admin=await Admin.findOne()
+    for (const images of req.files) {
+        var image = `admin.webp`;
+        const photo = images.data
+        let buffer = await sharp(photo).webp().toBuffer()
+        await sharp(buffer).toFile(`static/${image}`);
+        await admin.update({image})
+    }
+    return res.status(201).send(admin);
+})
+const intoArray = (file) => {
+    if (file[0].length == undefined) return file
+    else return file[0]
+}

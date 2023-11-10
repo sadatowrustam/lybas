@@ -1,20 +1,65 @@
-const sharp = require('sharp');
-const fs = require('fs');
 const AppError = require('../../utils/appError');
 const catchAsync = require('../../utils/catchAsync');
-
+const {Op}=require('sequelize')
 const { Notification,Users } = require('../../models');
-
+const capitalize = function(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+};
+exports.getAllNotifications = catchAsync(async(req,res,next)=>{
+    let { keyword} = req.query;
+    var where = {};
+    if (keyword && keyword != "undefined") {
+        let keywordsArray = [];
+        keyword = keyword.toLowerCase();
+        keywordsArray.push('%' + keyword + '%');
+        keyword = '%' + capitalize(keyword) + '%';
+        keywordsArray.push(keyword);
+        where = {
+            [Op.or]: [
+                {
+                    name: {
+                        [Op.like]: {
+                            [Op.any]: keywordsArray,
+                        },
+                    },
+                },
+                {
+                    text: {
+                        [Op.like]: {
+                            [Op.any]: keywordsArray,
+                        },
+                    },
+                },
+            ],
+        };
+    }
+    if(req.query.filter){
+        const filter=JSON.parse(req.query.filter)
+        const endDate=new Date(filter.endDate)
+        const startDate=new Date(filter.startDate)
+        if(filter.startDate!=undefined){
+            where.createdAt = {
+                [Op.gte]: startDate,
+                [Op.lte]: endDate 
+            }
+        }
+    }
+    where.type="public"
+    const data = await Notification.findAll({where})
+    const count=await Notification.count({where})
+    return res.send({data,count})
+})
 exports.addNotification = catchAsync(async(req, res, next) => {
     req.body.count=await Users.count()
     req.body.type="public"
+    req.body.isRead=true
     const newNotification = await Notification.create(req.body);
     return res.status(201).send(newNotification);
 });
 exports.editNotification = catchAsync(async(req, res, next) => {
-    const updateNotif = await Banners.findOne({where:{ id: req.params.id }})
+    const updateNotif = await Notification.findOne({where:{ id: req.params.id }})
     if (!updateNotif)
-        return next(new AppError("Banner with that id not found"), 404)
+        return next(new AppError("not found"), 404)
     await updateNotif.update(req.body)
     return res.status(200).send(updateNotif)
 })

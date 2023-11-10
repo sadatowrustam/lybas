@@ -8,8 +8,9 @@ exports.getMe = catchAsync(async(req, res, next) => {
     return res.status(200).send(req.seller);
 });
 exports.newAccount=catchAsync(async(req, res, next) => {
-    req.body.data=JSON.stringify(req.body.data)
-    const mail=await Mails.create(req.body)
+    req.body.dataUp.data=JSON.stringify(req.body.dataUp.dataUp)
+    req.body.type="newDressmaker "
+    const mail=await Mails.create(req.body.dataUp)
     return res.status(200).send(mail)
 })
 exports.updateMyPassword = catchAsync(async(req, res, next) => {

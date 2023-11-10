@@ -1,13 +1,12 @@
 const express = require('express');
-const {
-} = require('../../../controllers/admin/notificationController');
-const { protect } = require("../../../controllers/admin/adminControllers")
+const { addNotification, deleteNotification ,getAllNotifications, editNotification} = require('../../../controllers/admin/notificationController');
+const { getNotifications } = require('../../../controllers/users/usersControllers');
 const router = express.Router();
-router.get('/', );
-router.get('/:id', );
-router.post('/add', );
-router.patch("/:id", )
-router.delete('/:id', );
-router.post('/upload-image/:id', );
+router.get('/',getAllNotifications );
+router.get("/:id",getNotifications)
+router.post('/add',addNotification ); 
+router.patch("/:id",editNotification)
+router.post('/delete/:id',deleteNotification );
+ 
 
 module.exports = router;

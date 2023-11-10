@@ -30,6 +30,6 @@ app.all('*', (req, res, next) => {
     next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));
 });
 app.use(require('./controllers/errorController'));
-app.use(require("./controllers/dateController"))
+// app.use(require("./controllers/dateController"))
 
 module.exports = app;

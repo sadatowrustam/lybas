@@ -14,6 +14,18 @@ module.exports = {
             password: {
                 type: DataTypes.STRING
             },
+            image: {
+                type: DataTypes.STRING
+            },
+            user_phone:{
+                type:DataTypes.STRING
+            },
+            welayat:{
+                type:DataTypes.STRING
+            },
+            login:{
+                type:DataTypes.STRING
+            },
             createdAt: {
                 allowNull: false,
                 type: DataTypes.DATE

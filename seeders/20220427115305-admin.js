@@ -7,6 +7,7 @@ module.exports = {
             'admin', [{
                 id:uuid.v4(),
                 username:"admin",
+                login:"Admin",
                 password: await bcrypt.hash('admin', 12),
                 createdAt: DataTypes.fn('now'),
                 updatedAt: DataTypes.fn('now'),
