@@ -1,7 +1,7 @@
 const { Op } = require('sequelize');
 const {
     Products,
-    Categories,
+    Users,
     Productsizes,
     Images,
     Sizes,
@@ -74,7 +74,16 @@ exports.getOneProduct = catchAsync(async(req, res, next) => {
             },
             {
                 model:Comments,
-                as:"comments"
+                as:"comments",
+                include:[{
+                    model:Users,
+                    as:"user"
+                },
+                {
+                    model:Images,
+                    as:"images"
+                }
+            ]
             }
         ]
     })
@@ -122,7 +131,32 @@ exports.getOneProduct = catchAsync(async(req, res, next) => {
     }
     return res.send({ data:product })
 })
-
+exports.getComments = catchAsync(async(req, res, next) => {
+    const id = req.params.id
+    let oneProduct = await Products.findOne({
+        where: { id },
+              
+    })
+    const comments=await Comments.findAll({
+        include:[{
+            model:Users,
+            as:"user"
+        },
+        {
+            model:Images,
+            as:"images"
+        },
+    ],
+        order:[["createdAt","DESC"]]
+    })
+    const ratings=[]
+    const count=await Comments.count({where:{productId:oneProduct.id}})
+    for (let i=1;i<6;i++){
+        const rating=await Comments.count({where:{productId:oneProduct.id,rate:i}})
+        ratings.push({[i]:rating})
+    }
+    return res.send({ product:oneProduct,count,comments,ratings })
+})
 // Search
 const capitalize = function(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);

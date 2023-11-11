@@ -10,9 +10,11 @@ const {
     getTopProducts,
     searchLite
 } = require('../../../controllers/public/productsControllers');
+const { getComments } = require('../../../controllers/users/productsControllers');
 
 const router = express.Router();
 router.get("/", getProducts)
+router.get("/comments/:id",getComments)
 router.get("/top", getTopProducts)
 router.get("/liked", getLikedProducts)
 router.get('/search', searchProducts);

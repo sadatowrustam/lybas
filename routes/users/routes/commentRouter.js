@@ -6,13 +6,15 @@ const {
     editMyComment,
     getComment,
     deleteMyComment,
-    getAllComments
+    getAllComments,
+    uploadImage
 } = require("../../../controllers/users/commentController")
 
 router.post("/", addMyComment)
 router.get("/", getAllComments)
 router.patch("/:id", editMyComment)
 router.get("/:id", getComment)
+router.post("/upload-image/:id",uploadImage)
 router.delete("/:id", deleteMyComment)
 
 module.exports = router

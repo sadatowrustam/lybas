@@ -21,8 +21,17 @@ module.exports = {
       productId: {
         type: Sequelize.UUID
       },
+      rate: {
+        type: Sequelize.INTEGER
+      },
       deletedBy: {
         type: Sequelize.STRING
+      },
+      name:{
+        type:Sequelize.STRING
+      },
+      welayat:{
+        type:Sequelize.STRING
       },
       createdAt: {
         allowNull: false,

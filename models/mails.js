@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
     data: {
       type:DataTypes.TEXT,
       get(){
+        console.log(this.getDataValue("data"))
         return JSON.parse(this.getDataValue("data"))
       }
     },

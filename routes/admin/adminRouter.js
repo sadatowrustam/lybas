@@ -20,4 +20,5 @@ router.use("/users", protect, require("./routes/usersRouter"))
 router.use("/seller", require("./routes/sellerRouter")) 
 router.use("/mails",require("./routes/mailRouter"))
 router.use("/notifications",require("./routes/notificationRouter"))
+router.use("/comments",require("./routes/commentsRouter"))
 module.exports = router

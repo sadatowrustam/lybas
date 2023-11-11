@@ -60,6 +60,10 @@ module.exports = {
                 type: DataTypes.STRING,
                 defaultValue: "not"
             },
+            isCommented:{
+                type:DataTypes.BOOLEAN,
+                defaultValue:false
+            },
             createdAt: {
                 allowNull: false,
                 type: DataTypes.DATE,

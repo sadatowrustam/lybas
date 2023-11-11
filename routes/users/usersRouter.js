@@ -29,6 +29,7 @@ router.use("/address", protect, require("./routes/addressRouter"))
 router.use("/seller", protect, require("./routes/sellerRouter"))
 router.use("/my-orders", protect, require("./routes/ordersRouter"))
 router.use("/comments",protect,require("./routes/commentRouter"))
+router.use("/notifications",protect,require("./routes/notificationRouter"))
     // router.use("/competition", protect, require("./routes/"))
 router.patch('/forgot-password', verify_code_forgotten, forgotPassword);
 router.post('/signup', verify_code, signup);
@@ -47,7 +48,6 @@ router.post("/delete/not-ordered/:id", protect, deleteProduct)
 router.get("/like", protect, getUsersLikedProducts)
 router.post("/like", protect, likeProduct) 
 router.post("/dislike",protect,dislikeProduct)
-router.get("notification",protect,getNotifications)
 router.post("/newsletter",subscribeToNews)
 router.post("/delivery",deliverAbroad)
 module.exports = router;

@@ -9,7 +9,9 @@ exports.getMe = catchAsync(async(req, res, next) => {
 });
 exports.newAccount=catchAsync(async(req, res, next) => {
     req.body.dataUp.data=JSON.stringify(req.body.dataUp.dataUp)
-    req.body.type="newDressmaker "
+    req.body.dataUp.type="newDressmaker"
+    req.body.dataUp.isRead=false
+    console.log(req.body)
     const mail=await Mails.create(req.body.dataUp)
     return res.status(200).send(mail)
 })

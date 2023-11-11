@@ -132,17 +132,21 @@ exports.uploadUserImage = catchAsync(async(req, res, next) => {
     return res.status(201).send(user)
 });
 exports.getNotifications = catchAsync(async(req, res, next) => {
-    const updateNotif = await Notification.findOne({where:{ id: req.params.id }})
+    const updateNotif = await Notification.findOne({where:{id:req.params.id}})
     return res.status(200).send(updateNotif)
 })
 exports.subscribeToNews = catchAsync(async(req, res, next) => {
     req.body.type="newsletter"
+    req.body.mail=req.body.email
+    req.body.data=JSON.stringify({s:"s"})
+    req.body.isRead=false
     const mail=await Mails.create(req.body)
     return res.status(200).send(mail)
 })
 exports.deliverAbroad = catchAsync(async(req, res, next) => {
-    req.body.type="delivery"
+    req.body.type="deliveryAbroad"
     req.body.data=JSON.stringify(req.body)
+    req.body.isRead=false
     const mail=await Mails.create(req.body)
     return res.status(200).send(mail)
 })

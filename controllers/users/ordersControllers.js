@@ -101,6 +101,7 @@ exports.addInstantOrder=catchAsync(async(req,res,next)=>{
         orderProductData.quantity = quantity
         orderProductData.total_price = quantity * productsize.price
         orderProductData.productId = product.id
+        orderProductData.materialId= product.materialId
         console.log("sizesize",productsize.size)
         orderProductData.size= productsize.size.size
     
@@ -221,6 +222,7 @@ exports.getMyOrders=catchAsync(async(req,res,next)=>{
             model:Orderproducts,
             as:"order_products",
             where:{userId:req.user.id},
+            order:[["createdAt","DESC"]],
             include:[
                 {
                     model:Products,

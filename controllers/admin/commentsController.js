@@ -1,10 +1,17 @@
-const { Mails } = require("../../models")
-const catchAsync = require("../../utils/catchAsync")
+const fs = require('fs');
+const sharp = require("sharp")
+const AppError = require('../../utils/appError');
+const catchAsync = require('../../utils/catchAsync');
 const {Op}=require("sequelize")
+const {
+    Comments,
+    Images,
+    Users
+} = require('../../models');
 const capitalize = function(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 };
-exports.getAllMails = catchAsync(async(req, res, next) => {
+exports.getAllComments = catchAsync(async(req, res, next) => {
     let { keyword} = req.query;
     var where = {};
     if (keyword && keyword != "undefined") {
@@ -16,7 +23,7 @@ exports.getAllMails = catchAsync(async(req, res, next) => {
         where = {
             [Op.or]: [
                 {
-                    mail: {
+                    text: {
                         [Op.like]: {
                             [Op.any]: keywordsArray,
                         },
@@ -43,34 +50,30 @@ exports.getAllMails = catchAsync(async(req, res, next) => {
             }
         }
     }
-    if(req.query.type&&req.query.type!="undefined") where.type=req.query.type
-    const limit=req.query.limit || 20
-    const offset=req.query.offset || 0
-
-    const count=await Mails.count({where})
-    const data=await Mails.findAll({
-        where,
-        limit,
+    const limit = req.query.limit || 20
+    const offset = req.query.offset
+    const data = await Comments.findAll({ 
+        where, 
+        limit, 
         offset,
-        order:[["createdAt","DESC"]]
-    })
-    const notRead=await Mails.count({where:{isRead:false}})
-    return res.send({data,count,notRead})
+        order:[["createdAt","DESC"]],
+        include:[
+            {
+                model:Users,
+                as:"user"
+            },
+                {
+                    model:Images,
+                    as:"images"
+                }
+            ] 
+        })
+    const count=await Comments.count({where})
+    return res.status(200).send({data,count})
 })
-exports.getMail=catchAsync(async(req,res,next)=>{
-    const mail=await Mails.findOne({where:{id:req.params.id}})
-    return res.send(mail)
-})
-
-exports.isRead=catchAsync(async(req,res,next)=>{
-    const unreadMails=await Mails.findAll({
-        where: {
-          isRead: false,
-        }
-      });
-      for (const mail of unreadMails) {
-        mail.isRead = true;
-        await mail.save();
-      }
-    return res.send("Sucess")
+exports.editStatus=catchAsync(async(req,res,next)=>{
+    console.log(req.body)
+    const commment=await Comments.findOne({where:{id:req.body.id}})
+    await commment.update({isActive:req.body.isActive})
+    return res.send(commment)
 })

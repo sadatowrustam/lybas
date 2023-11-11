@@ -97,10 +97,6 @@ exports.signup = catchAsync(async(req, res, next) => {
         console.log(req.body)
         const verification=await Verification.findOne({where:{user_phone:user_checked_phone,code}})
         if(!verification) return next(new AppError("Wrong verification code",401))
-        if (password.length < 6)
-            return next(
-                new AppError('Password have to be at least 6 characters', 400)
-            );
         if (password != passwordConfirm)
             return next(new AppError('Passwords are not the same', 400));
         password = await bcrypt.hash(password, 12)

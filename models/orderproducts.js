@@ -60,7 +60,11 @@ module.exports = (sequelize, DataTypes) => {
         size: {
             type: DataTypes.STRING,
             defaultValue: "-"
-        }
+        },
+        isCommented:{
+            type:DataTypes.BOOLEAN,
+              defaultValue:false
+          },
     }, {
         sequelize,
         tableName: 'orderproducts',

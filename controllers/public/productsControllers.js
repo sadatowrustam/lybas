@@ -34,7 +34,7 @@ exports.getProducts = catchAsync(async(req, res) => {
                 model:Sizes,
                 as:"size"
             }
-        }
+        },
     ],
         where
     });

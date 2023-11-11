@@ -13,7 +13,8 @@ const {
     Images,
     Productsizes,
     Seller,
-    Sizes
+    Sizes,
+    Users
 } = require('../../models');
 const capitalize = function(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -81,11 +82,31 @@ exports.getOneProduct = catchAsync(async(req, res, next) => {
                 model: Images,
                 as: "images"
             },
-            
             {
-                model: Categories,
-                as: "category"
+                model: Seller,
+                as: "seller"
             },
+            {
+                model:Material,
+                as:"material"
+            },
+            {
+                model:Colors,
+                as:"color"
+            },
+            {
+                model:Comments,
+                as:"comments",
+                include:[{
+                    model:Images,
+                    as:"images"
+                },
+                {
+                    model:Users,
+                    as:"user"
+                }
+                ]
+            }
         ]
     })
     return res.send(oneProduct)
