@@ -18,6 +18,9 @@ module.exports = {
       userId: {
         type: Sequelize.UUID
       },
+      sellerId: {
+        type: Sequelize.UUID
+      },
       productId: {
         type: Sequelize.UUID
       },

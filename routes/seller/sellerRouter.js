@@ -5,4 +5,6 @@ router.post("/login", login)
 router.use("/account",  require("./routes/sellerRouter"))
 router.use("/products", protect, require("./routes/productsRouter"))
 router.use("/orders", protect, require("./routes/ordersRouter"))
+router.use("/comments",protect,require("./routes/commentsRouter"))
+router.use("/mails",protect,require("./routes/mailRouter"))
 module.exports = router

@@ -15,6 +15,5 @@ router.get("/stats",getStats)
 router.delete('/order-products/delete/:id', deleteOrderProduct);
 router.get('/order-products/:id', getOrderProducts);
 router.patch('/status/:id', changeOrderStatus);
-
 router.delete("/:id",deleteOrder)
 module.exports = router;

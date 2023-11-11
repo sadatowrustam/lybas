@@ -85,7 +85,7 @@ module.exports = (sequelize, DataTypes) => {
             },
         },
         body_en: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: false,
             validate: {
                 notNull: {
@@ -136,7 +136,6 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING,
 
         },
-        stock:DataTypes.INTEGER,
         note:DataTypes.TEXT,
         categoryId: DataTypes.UUID,
         sellerId: DataTypes.UUID,

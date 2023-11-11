@@ -13,35 +13,51 @@ exports.addMyOrders = catchAsync(async(req, res, next) => {
     let total_price = 0;
     let total_quantity = 0;
     let where= {[Op.and]: [{ userId: req.user.id }, { isOrdered: false }]}
-    const order_products = await Orderproducts.findAll({where,order:[["createdAt","DESC"]]})
+    let order_products = await Orderproducts.findAll({where,order:[["createdAt","DESC"]]})
     let orders_array = []
     if (order_products.length == 0) return next(new AppError("Nothing to order", 400))
-    for (var j = 0; j < order_products.length; j++) {
-        if (order_products[j].productsizeId != null) {
-            var product_size = await Productsizes.findOne({ where: { id: order_products[j].productsizeId },include:{model:Sizes,as:"size"}})
+    let new_array=[]
+    order_products.sort((a, b) => a.sellerId - b.sellerId);
+    for (let i=0;i<order_products.length;i++) {
+        
+        let filtered=order_products.filter((object) => object.sellerId === order_products[0].sellerId);
+        let obj={
+            sellerId:order_products[0].sellerId,
+            order_products:filtered
         }
-        var product = await Products.findOne({
-            where: { id: order_products[j].productId },
-        });
-        if (product_size) {
-            console.log("ine men")
-            if (product_size.stock < order_products[j].quantity) {
-                order_products[j].quantity = product_size.stock
-            }
-            // checkedProducts.push(product_size);
-            console.log("32size",product_size.size.size)
-            order_products[j].size=product_size.size.size
-            order_products[j].total_price = product_size.price * order_products[j].quantity
-        } else if (product) {
-            if (product.stock < order_products[j].quantity) {
-                order_products[j].quantity = product.stock
-            }
-            order_products[j].total_price = product.price * order_products[j].quantity
-            // checkedProducts.push(product);
-        }
-        total_quantity = total_quantity + order_products[j].quantity;
-        total_price = total_price + order_products[j].total_price;
+        new_array.push(obj)
+        order_products.splice(0,filtered.length)
+        if(order_products.length==0) break
+        i=0
     }
+    for (let i=0;i<new_array.length;i++){
+        total_price=0
+        total_quantity=0
+        for (var j = 0; j < new_array[i].order_products.length; j++) {
+            if (new_array[i].order_products[j].productsizeId != null) {
+                var product_size = await Productsizes.findOne({ where: { id: new_array[i].order_products[j].productsizeId },include:{model:Sizes,as:"size"}})
+            }
+            var product = await Products.findOne({
+                where: { id: new_array[i].order_products[j].productId },
+            });
+            if (product_size) {
+                console.log("ine men")
+                if (product_size.stock < new_array[i].order_products[j].quantity) {
+                    new_array[i].order_products[j].quantity = product_size.stock
+                }
+                // checkedProducts.push(product_size);
+                new_array[i].order_products[j].size=product_size.size.size
+                new_array[i].order_products[j].total_price = product.price * new_array[i].order_products[j].quantity
+            } else if (product) {
+                if (product.stock < new_array[i].order_products[j].quantity) {
+                    new_array[i].order_products[j].quantity = product.stock
+                }
+                new_array[i].order_products[j].total_price = product.price * new_array[i].order_products[j].quantity
+                // checkedProducts.push(product);
+            }
+            total_quantity = total_quantity + new_array[i].order_products[j].quantity;
+            total_price = total_price + new_array[i].order_products[j].total_price;
+        }
         const order = await Orders.create({
             userId: req.user.id,
             total_price,
@@ -51,25 +67,28 @@ exports.addMyOrders = catchAsync(async(req, res, next) => {
             note,
             status: "waiting",
             total_quantity,
-            address
+            address,
+            sellerId:new_array[i].sellerId
         });
         orders_array.push(order)
-        for (var x = 0; x < order_products.length; x++) {
+        for (var x = 0; x < new_array[i].order_products.length; x++) {
             await Orderproducts.update({
                 orderId: order.id,
-                quantity: order_products[x].quantity,
-                price: order_products[x].price,
-                total_price: order_products[x].total_price,
-                size: order_products[x].size,
+                quantity: new_array[i].order_products[x].quantity,
+                price: new_array[i].order_products[x].price,
+                total_price: new_array[i].order_products[x].total_price,
+                size: new_array[i].order_products[x].size,
                 isOrdered: true,
                 status: "waiting"
             }, {
                 where: {
-                    id: order_products[x].id,
+                    id: new_array[i].order_products[x].id,
                     }
             });
-
+        
+    
         }
+    }
     
     return res.status(200).json({
         status: 'Your orders accepted and will be delivered as soon as possible',
@@ -95,11 +114,11 @@ exports.addInstantOrder=catchAsync(async(req,res,next)=>{
     if (!product) return next(new AppError("Product not found with that id", 404))
     let productsize = await Productsizes.findOne({where: { id:productsizeId },include:{model:Sizes,as:"size"}})
     if (!productsize) return next(new AppError("Size with that id not found"))
-        orderProductData.price = productsize.price
+        orderProductData.price = product.price
         orderProductData.image = product.images[0].image
         orderProductData.productsizeId = productsize.id
         orderProductData.quantity = quantity
-        orderProductData.total_price = quantity * productsize.price
+        orderProductData.total_price = quantity * product.price
         orderProductData.productId = product.id
         orderProductData.materialId= product.materialId
         console.log("sizesize",productsize.size)
@@ -123,98 +142,6 @@ exports.addInstantOrder=catchAsync(async(req,res,next)=>{
     await order_product.update(orderProductData)
     return res.status(201).send(order_product)
 })
-// exports.getMyOrders = catchAsync(async(req, res, next) => {
-//     const limit = req.query.limit || 20;
-//     const offset = req.query.offset || 0;
-//     let where = {}
-//     where.userId = req.user.id
-//     const order_products = await Orderproducts.findAll({
-//         where,
-//         order: [
-//             ['createdAt', 'DESC']
-//         ],
-//         limit,
-//         offset,
-//     });
-//     const checked_products = []
-//     for (var i = 0; i < order_products.length; i++) {
-//         const product = await Products.findOne({
-//             where: { product_id: order_products[i].product_id },
-//         });
-
-//         if (!product)
-//             continue
-//         const {
-//             product_id,
-//             name_tm,
-//             name_ru,
-//             body_tm,
-//             body_ru
-//         } = product;
-//         if (order_products[i].product_size_id != null) {
-//             var product_size = await Productsizes.findOne({ where: { product_size_id: order_products[i].product_size_id } })
-//         }
-//         const obj = {
-//             orderproduct_id: order_products[i].orderproduct_id,
-//             product_id,
-//             name_tm,
-//             name_ru,
-//             body_tm,
-//             body_ru,
-//             image: order_products[i].image,
-//             quantity: order_products[i].quantity,
-//             createdAt: order_products[i].createdAt,
-//             status: order_products[i].status
-//         };
-//         if (product_size) {
-//             obj.size = product_size.size
-//             obj.price = product_size.price
-//             obj.price_old = product_size.price_old
-//             obj.total_price = product_size.price * order_products[i].quantity
-//             obj.product_size_id = product_size.product_size_id
-//             if(product_size.product_color){
-//                 obj.product_color_name_tm=product_size.product_color.name_tm
-//                 obj.product_color_name_ru=product_size.product_color.name_ru
-//             }
-//         } else if (product) {
-//             obj.price = product.price
-//             obj.price_old = product.price_old
-//             obj.total_price = product.price * order_products[i].quantity
-//         }
-//         checked_products.push(obj);
-//     }
-//     let new_array = []
-//     for (let i = 0; i < checked_products.length; i++) {
-//         if (i == 0) {
-//             const objj = {
-//                 date: checked_products[i].createdAt,
-//                 orders: [checked_products[i]]
-//             }
-//             new_array.push(objj);
-//         } else {
-//             let bool = true;
-//             for (let j = 0; j < new_array.length; j++) {
-//                 if (new_array[j].date.getDate() == checked_products[i].createdAt.getDate()) {
-//                     new_array[j].orders.push(checked_products[i]);
-//                     bool = false;
-//                     break
-//                 }
-//             }
-//             if (bool) {
-//                 new_array.push({
-//                     date: checked_products[i].createdAt,
-//                     orders: [checked_products[i]]
-//                 })
-//             }
-//         }
-//     }
-//     const count = await Orderproducts.count({
-//         where
-//     });
-//     return res.send({ orders: new_array, count })
-
-//     // res.status(200).send(orders);
-// });
 exports.getMyOrders=catchAsync(async(req,res,next)=>{
     const order=await Orders.findAll({
         where:{userId:req.user.id},
@@ -355,9 +282,9 @@ exports.getNotOrderedProducts = catchAsync(async(req, res, next) => {
         };
         if (product_size) {
             obj.size = product_size.size.size
-            obj.price = product_size.price
-            obj.price_old = product_size.price_old
-            obj.total_price = product_size.price * order_products[i].quantity
+            obj.price = product.price
+            obj.price_old = product.price_old
+            obj.total_price = product.price * order_products[i].quantity
         } else if (product) {
             obj.price = product.price
             obj.price_old = product.price_old

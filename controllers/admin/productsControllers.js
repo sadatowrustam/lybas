@@ -14,7 +14,9 @@ const {
     Productsizes,
     Seller,
     Sizes,
-    Users
+    Users,
+    Colors,
+    Comments,
 } = require('../../models');
 const capitalize = function(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -148,7 +150,6 @@ exports.addProduct = catchAsync(async(req, res, next) => {
         return next(new AppError('Category did not found with that ID', 404));
     const date = new Date()
     req.body.is_new_expire = date.getTime()
-    req.body.stock = Number(req.body.stock)
     req.body.categoryId = category.id;
     req.body.price_old=null
     if (Number(req.body.discount) > 0) {
@@ -156,6 +157,7 @@ exports.addProduct = catchAsync(async(req, res, next) => {
         req.body.price =(req.body.price / 100) *(100 - req.body.discount);
     }
     req.body.isActive=true
+    console.log(req.body)
     const newProduct = await Products.create(req.body);
     return res.status(201).send(newProduct)
 })

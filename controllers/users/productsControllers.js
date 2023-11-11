@@ -10,7 +10,8 @@ const {
     Likedproducts,
     Seller,
     Colors,
-    Comments
+    Comments,
+    Mails
 } = require('../../models');
 const catchAsync = require('../../utils/catchAsync');
 const AppError = require('../../utils/appError');
@@ -18,8 +19,8 @@ exports.getProducts = catchAsync(async(req, res) => {
     const limit = req.query.limit || 10;
     const { offset } = req.query;
     let where={}
-    if(req.query.sort)
-        where=getWhere(JSON.parse(req.query.sort))
+    if(req.query.filter)
+        where=getWhere(JSON.parse(req.query.filter))
     const order=getOrder(req.query)
     let products = await Products.findAll({
         order,
@@ -134,8 +135,7 @@ exports.getOneProduct = catchAsync(async(req, res, next) => {
 exports.getComments = catchAsync(async(req, res, next) => {
     const id = req.params.id
     let oneProduct = await Products.findOne({
-        where: { id },
-              
+        where: { id },       
     })
     const comments=await Comments.findAll({
         include:[{
@@ -153,7 +153,12 @@ exports.getComments = catchAsync(async(req, res, next) => {
     const count=await Comments.count({where:{productId:oneProduct.id}})
     for (let i=1;i<6;i++){
         const rating=await Comments.count({where:{productId:oneProduct.id,rate:i}})
-        ratings.push({[i]:rating})
+        console.log(count,rating)
+        let percentageDifference=(rating * 100) / count;
+        percentageDifference=isFinite(percentageDifference) ? percentageDifference : 0
+        console.log(percentageDifference)
+        ratings.push(percentageDifference)
+          
     }
     return res.send({ product:oneProduct,count,comments,ratings })
 })
@@ -210,7 +215,16 @@ exports.searchProducts = catchAsync(async(req, res, next) => {
     return res.status(200).send({ products });
 });
 exports.addReminder=catchAsync(async(req,res,next)=>{
-    const data=await Instock.create(req.body)
+const data=await Instock.create(req.body)
+    let obj={}
+    obj.sellerId=req.body.sellerId
+    obj.type="outStock"
+    const productsize=await Productsizes.findOne({where:{id:req.body.productsizeId}})
+    obj.data=JSON.stringify({size:req.body.size,link:"http://192.168.57.2:3010/dresses/"+productsize.productId})
+    obj.mail=req.body.mail
+    obj.isRead=false
+    console.log(obj)
+    const mail=await Mails.create(obj)
     return res.status(200).send(data)
 })
 async function isLiked(products, req) {

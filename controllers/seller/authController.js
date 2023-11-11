@@ -18,7 +18,7 @@ exports.verify_code_forgotten = catchAsync(async(req, res, next) => {
         })
         const obj = {
             number: phone,
-            sms: 'Serpay tassyklaýyş koduňyz: ' + generated_code,
+            sms: 'Taze parol ' + generated_code,
         };
         var io = req.app.get('socketio');
         io.emit("verification-phone", obj)
@@ -60,7 +60,7 @@ exports.protect = catchAsync(async(req, res, next) => {
     req.seller = freshSeller;
     next();
 });
-exports.forgotPassword = catchAsync(async(req, res, next) => {
+exports. forgotPassword = catchAsync(async(req, res, next) => {
     if (req.body.user_checked_phone) {
         const { user_checked_phone, newPassword, newPasswordConfirm } = req.body;
         if (newPassword != newPasswordConfirm) return next(new AppError('Passwords are not the same', 400));
@@ -68,8 +68,8 @@ exports.forgotPassword = catchAsync(async(req, res, next) => {
             where: { number: user_checked_phone },
         });
         if (!seller) return next(new AppError('User not found', 404));
-        seller.password = await bcrypt.hash(newPassword, 12);
-        await seller.save();
+        let password = await bcrypt.hash(newPassword, 12);
+        await seller.update({password});
         createSendToken(seller, 200, res);
     } else {
         res.send(400).json({

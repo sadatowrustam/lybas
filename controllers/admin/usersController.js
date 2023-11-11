@@ -14,12 +14,10 @@ exports.getAllUsers = catchAsync(async(req, res, next) => {
     return res.status(200).send(users)
 })
 exports.getStats=catchAsync(async(req,res,next)=>{
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - 1);
-
-    const endDate = new Date();
-    const secondDate=endDate()
-    secondDate.setMonth(endDate.getMonth() -2 );
+    const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const firstDayOfNextMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1);
+    const firstDayOfLastMonth = new Date(new Date().getFullYear(), new Date().getMonth() -1, 1);
+    
     const data = await Users.findAll({
         where: {
             createdAt: {

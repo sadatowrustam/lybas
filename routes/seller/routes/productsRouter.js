@@ -2,7 +2,6 @@ const express = require('express');
 const {
     addProduct,
     getAllActiveProducts,
-    getOneProduct,
 } = require('../../../controllers/seller/productsControllers');
 const {
     editProduct,
@@ -12,11 +11,12 @@ const {
     editProductStatus,
     addColor,
     addSize,
+    getOneProduct,
 } = require("../../../controllers/admin/productsControllers")
 const router = express.Router();
 
 router.get('/', getAllActiveProducts);
-router.get("/:id", getOneProduct)
+router.get("/:id",getOneProduct )
 router.post("/add", addProduct)
 router.post("/add/size/:id", addSize)
 router.patch('/:id', editProduct);

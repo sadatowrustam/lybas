@@ -8,7 +8,7 @@ exports.getAllColors = catchAsync(async(req, res, next) => {
         limit,
         offset,
         order: [
-            ["createdAt", "DESC"]
+            ["createdAt", "ASC"]
         ]
     })
     const count=await Colors.count()

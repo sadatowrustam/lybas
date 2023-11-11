@@ -23,11 +23,11 @@ exports.addMyCart = catchAsync(async(req, res, next) => {
             where: { id:productsizeId },
         })
         if (!productsize) return next(new AppError("Size with that id not found"))
-        orderProductData.price = productsize.price
+        orderProductData.price = product.price
         orderProductData.image = product.images[0].image
         orderProductData.productsizeId = productsize.id
         orderProductData.quantity = quantity
-        orderProductData.total_price = quantity * productsize.price
+        orderProductData.total_price = quantity * product.price
         orderProductData.productId = product.id
         orderProductData.materialId= product.materialId
     }
@@ -46,7 +46,7 @@ exports.updateProduct = catchAsync(async(req, res, next) => {
     const product = await Products.findOne({ where: { id: order_product.productId } })
     if (!product) return next(new AppError("Product not found with that id not found", 404))
     var product_size = await Productsizes.findOne({ where: { id:order_product.productsizeId } })
-    price = product_size.price
+    price = price.price
     await order_product.update({
         price,
         total_price: price * quantity,
@@ -66,7 +66,8 @@ exports.isOrdered = catchAsync(async(req, res, next) => {
     if (order_product) {
         status = 1
         const product_size=await Productsizes.findOne({where:{id:productsizeId}})
-        order_product.price = product_size.price
+        const product=await Products.findOne({where:{id:product_size.productId}})
+        order_product.price = product.price
         order_product.total_price = order_product.price * order_product.quantity
     }
     return res.status(200).send({ status, order_product })

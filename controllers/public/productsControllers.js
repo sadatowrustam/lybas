@@ -8,7 +8,8 @@ const {
     Sizes,
     Material,
     Colors,
-    Comments
+    Comments,
+    Users
 } = require('../../models');
 const catchAsync = require('../../utils/catchAsync');
 const AppError = require('../../utils/appError');
@@ -16,8 +17,8 @@ exports.getProducts = catchAsync(async(req, res) => {
     const limit = req.query.limit || 10;
     const { offset } = req.query;
     let where={}
-    if(req.query.sort)
-        where=getWhere(JSON.parse(req.query.sort))
+    if(req.query.filter)
+        where=getWhere(JSON.parse(req.query.filter))
     const order=getOrder(req.query)
     const products = await Products.findAll({
         order,
@@ -336,8 +337,17 @@ exports.getOneProduct = catchAsync(async(req, res, next) => {
             },
             {
                 model:Comments,
-                as:"comments"
-            }
+                as:"comments",
+                include:[{
+                    model:Users,
+                    as:"user"
+                },
+                {
+                    model:Images,
+                    as:"images"
+                }
+            ]
+            },
         ]
     })
     if (!oneProduct) {

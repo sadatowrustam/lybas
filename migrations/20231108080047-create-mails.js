@@ -27,6 +27,9 @@ module.exports = {
       isRead:{
         type:Sequelize.BOOLEAN
       },
+      sellerId:{
+        type:Sequelize.UUID
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

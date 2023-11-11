@@ -8,7 +8,7 @@ exports.getAllSizes = catchAsync(async(req, res, next) => {
         limit,
         offset,
         order: [
-            ["id", "DESC"]
+            ["id", "ASC"]
         ]
     })
     const count=await Sizes.count()

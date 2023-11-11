@@ -13,7 +13,7 @@ exports.getAllCategories = catchAsync(async(req, res) => {
         limit,
         offset,
         order: [
-            ['createdAt', 'DESC'],
+            ['createdAt', 'ASC'],
         ],
     });
     const count=await Categories.count()
