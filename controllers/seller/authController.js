@@ -22,7 +22,8 @@ exports.verify_code_forgotten = catchAsync(async(req, res, next) => {
         };
         var io = req.app.get('socketio');
         io.emit("verification-phone", obj)
-        res.status(200).json({ generated_code: generated_code });
+        await Verification.create({user_phone:phone,code:generated_code})
+        res.status(200).json("Code sent");
     } else next();
 });
 exports.login = catchAsync(async(req, res, next) => {
@@ -33,7 +34,6 @@ exports.login = catchAsync(async(req, res, next) => {
     }
     seller.password = undefined
     createSendTokenSeller(seller, 200, res)
-
 })
 exports.protect = catchAsync(async(req, res, next) => {
     let token;

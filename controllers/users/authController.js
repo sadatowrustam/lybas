@@ -49,11 +49,12 @@ exports.verify_code_forgotten = catchAsync(async(req, res, next) => {
         const obj = {
             code: generated_code,
             number: user_phone,
-            sms: 'Serpay tassyklaýyş koduňyz: ' + generated_code,
+            sms: 'Lybas tassyklaýyş koduňyz: ' + generated_code,
 
         }
         var io = req.app.get('socketio');
         io.emit("verification-phone", obj)
+        await Verification.create({user_phone,code:generated_code})
         res.status(200).json({ id: generated_code });
     } else next();
 });
@@ -161,3 +162,9 @@ exports.forgotPassword = catchAsync(async(req, res, next) => {
         });
     }
 });
+exports.checkCode=catchAsync(async(req,res,next)=>{
+    const {user_phone,code}=req.body
+    const verification=await Verification.findOne({where:{user_phone,code}})
+    if(!verification) return next(new AppError("Wrong verification code",401)) 
+    return res.send("True")
+})

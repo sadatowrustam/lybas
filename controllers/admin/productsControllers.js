@@ -225,7 +225,7 @@ exports.uploadProductImage = catchAsync(async(req, res, next) => {
         const image_id = v4()
         const image = `${image_id}_product.webp`;
         const photo = images.data
-        let buffer = await sharp(photo).webp().toBuffer()
+        let buffer = await sharp(photo).webp().resize(454,510).toBuffer()
         await sharp(buffer).toFile(`static/${image}`);
         let newImage = await Images.create({ image, id:image_id, productId: req.params.id })
 

@@ -4,7 +4,7 @@ const {
     Productsizes,
     Images,
     Seller,
-    Searchhistory,
+    Blogs,
     Sizes,
     Material,
     Colors,
@@ -175,17 +175,17 @@ exports.searchProducts = catchAsync(async(req, res, next) => {
     const limit = req.query.limit || 20;
     let { keyword, offset, sort } = req.query;
     var order;
-    if (sort == 1) {
-        order = [
-            ['price', 'DESC']
-        ];
-    } else if (sort == 0) {
-        order = [
-            ['price', 'ASC']
-        ];
-    } else order = [
-        ['updatedAt', 'DESC']
-    ];
+    // if (sort == 1) {
+    //     order = [
+    //         ['price', 'DESC']
+    //     ];
+    // } else if (sort == 0) {
+    //     order = [
+    //         ['price', 'ASC']
+    //     ];
+    // } else order = [
+    //     ['updatedAt', 'DESC']
+    // ];
 
     let keywordsArray = [];
     keyword = keyword.toLowerCase();
@@ -206,10 +206,17 @@ exports.searchProducts = catchAsync(async(req, res, next) => {
                         [Op.any]: keywordsArray,
                     },
                 },
-
+            },
+            {
+                name_en: {
+                    [Op.like]: {
+                        [Op.any]: keywordsArray,
+                    },
+                },
             },
         ],
     }
+
     const products = await Products.findAll({
         where,
         order,
@@ -223,23 +230,39 @@ exports.searchProducts = catchAsync(async(req, res, next) => {
         ]
     });
     delete where.isActive
-    const subcategories = await Subcategories.findAll({
-        where,
-        order,
-        limit,
-        offset
-    })
+
     const seller = await Seller.findAll({
         where,
         order,
         limit,
         offset
     })
-    const searchhistory=await Searchhistory.findOne({where:{name:keyword}})
-    if(!searchhistory) await Searchhistory.create({name:keyword,count:1})
-    else await searchhistory.update({count:searchhistory.count+1})
-
-    return res.status(200).send({ products, subcategories, seller });
+    where = {
+        [Op.or]: [{
+                header_tm: {
+                    [Op.like]: {
+                        [Op.any]: keywordsArray,
+                    },
+                },
+            },
+            {
+                header_ru: {
+                    [Op.like]: {
+                        [Op.any]: keywordsArray,
+                    },
+                },
+            },
+            {
+                header_en: {
+                    [Op.like]: {
+                        [Op.any]: keywordsArray,
+                    },
+                },
+            },
+        ],
+    };
+    const blogs=await Blogs.findAll({where}) 
+    return res.status(200).send({ products, blogs, seller });
 });
 exports.searchLite = catchAsync(async(req, res, next) => {
     let { keyword } = req.query

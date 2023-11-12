@@ -6,6 +6,7 @@ const {
     protect,
     verify_code,
     verify_code_forgotten,
+    checkCode,
 } = require('../../controllers/users/authController');
 const { getMyCart, addMyCart, select, updateProduct, deleteProduct, isOrdered, deleteSelected, selectAll } = require('../../controllers/users/cartControllers');
 const { getNotOrderedProducts, } = require('../../controllers/users/ordersControllers');
@@ -32,6 +33,7 @@ router.use("/comments",protect,require("./routes/commentRouter"))
 router.use("/notifications",protect,require("./routes/notificationRouter"))
     // router.use("/competition", protect, require("./routes/"))
 router.patch('/forgot-password', verify_code_forgotten, forgotPassword);
+router.post("/check-code",checkCode)
 router.post('/signup', verify_code, signup);
 router.get("/get-me", protect, getMe)
 router.post('/login', login);

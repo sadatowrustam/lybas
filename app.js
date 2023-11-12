@@ -21,7 +21,6 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }))
 app.use(express.static(`${__dirname}/static`));
 app.use(fileupload())
-
 app.use('/users', require('./routes/users/usersRouter'));
 app.use('/admin', require('./routes/admin/adminRouter'));
 app.use('/public', require('./routes/public/publicRouter'));
@@ -30,6 +29,6 @@ app.all('*', (req, res, next) => {
     next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));
 });
 app.use(require('./controllers/errorController'));
-// app.use(require("./controllers/dateController"))
+// app.use(require("./controllers/dateController"))s
 
 module.exports = app;
