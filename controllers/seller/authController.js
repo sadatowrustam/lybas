@@ -1,14 +1,15 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { Seller } = require('../../models');
+const { Seller,Verification } = require('../../models');
 const randomstring = require('randomstring');
 const { createSendTokenSeller } = require('./../../utils/createSendToken');
 const catchAsync = require('../../utils/catchAsync');
 const AppError = require('../../utils/appError');
 exports.verify_code_forgotten = catchAsync(async(req, res, next) => {
-    if (req.body.phone) {
-        const { phone } = req.body;
-        const seller = await Seller.findOne({ where: { number: phone } });
+    console.log(req.body)
+    if (req.body.user_phone) {
+        const { user_phone } = req.body;
+        const seller = await Seller.findOne({ where: { phone_number: user_phone } });
         if (!seller) {
             return next(new AppError('This number has not signed as seller', 400));
         }
@@ -17,12 +18,13 @@ exports.verify_code_forgotten = catchAsync(async(req, res, next) => {
             length: 6
         })
         const obj = {
-            number: phone,
+            number: user_phone,
             sms: 'Taze parol ' + generated_code,
         };
+        console.log(generated_code)
         var io = req.app.get('socketio');
-        io.emit("verification-phone", obj)
-        await Verification.create({user_phone:phone,code:generated_code})
+        io.emit("verification-user_phone", obj)
+        await Verification.create({user_phone:user_phone,code:generated_code})
         res.status(200).json("Code sent");
     } else next();
 });
@@ -62,18 +64,41 @@ exports.protect = catchAsync(async(req, res, next) => {
 });
 exports. forgotPassword = catchAsync(async(req, res, next) => {
     if (req.body.user_checked_phone) {
-        const { user_checked_phone, newPassword, newPasswordConfirm } = req.body;
-        if (newPassword != newPasswordConfirm) return next(new AppError('Passwords are not the same', 400));
+        let { user_checked_phone, password, password_confirm } = req.body;
+        if (password != password_confirm) return next(new AppError('Passwords are not the same', 400));
         const seller = await Seller.findOne({
-            where: { number: user_checked_phone },
+            where: { phone_number: user_checked_phone },
         });
         if (!seller) return next(new AppError('User not found', 404));
-        let password = await bcrypt.hash(newPassword, 12);
+         password = await bcrypt.hash(password, 12);
         await seller.update({password});
-        createSendToken(seller, 200, res);
+        createSendTokenSeller(seller, 200, res);
     } else {
-        res.send(400).json({
+        return res.send(400).json({
             msg: 'Firstly you have to verify your number',
         });
     }
 });
+exports.checkCode=catchAsync(async(req,res,next)=>{
+    const {user_phone,code}=req.body
+    console.log(req.body)
+    const verification=await Verification.findOne({where:{user_phone,code}})
+    if(!verification) return next(new AppError("Wrong verification code",401)) 
+    // const generated_code = randomstring.generate({
+    //     length: 6,
+    //     charset: "numeric"
+    // })
+    // console.log(generated_code)
+    // const obj = {
+    //     code: generated_code,
+    //     number: user_phone,
+    //     sms: 'Taze parolynyz: ' + generated_code,
+
+    // }
+    // let password = await bcrypt.hash(generated_code, 12)
+    // const user=await Users.findOne({where:{user_phone:phone_number}})
+    // await user.update({password})
+    // var io = req.app.get('socketio');
+    // io.emit("verification-phone", obj)
+    return res.send("True")
+})

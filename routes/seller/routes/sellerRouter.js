@@ -3,7 +3,8 @@
      login,
      protect,
      verify_code_forgotten,
-     forgotPassword
+     forgotPassword,
+     checkCode
  } = require('../../../controllers/seller/authController');
  const {
      getMe,
@@ -16,8 +17,9 @@
  const router = express.Router();
  router.post("/new-account",newAccount)
  router.patch('/forgot-password', verify_code_forgotten, forgotPassword);
+ router.post("/check-code",checkCode)
  router.get('/get-me', protect, getMe);
- router.patch('/', protect, updateMe);
+ router.patch('/edit', protect, updateMe);
  router.delete('/delete-me', protect, deleteMe);
  router.patch('/password', protect, updateMyPassword);
  router.post("/upload-image/", protect, uploadSellerImage);

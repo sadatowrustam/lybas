@@ -161,6 +161,11 @@ module.exports = {
             stock:{
                 type:DataTypes.INTEGER
             },
+            edited:{
+                type: DataTypes.BOOLEAN,
+                allowNull: false,
+                defaultValue: true,
+            },
             welayat: {
                 type: DataTypes.STRING,
             },

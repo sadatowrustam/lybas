@@ -44,7 +44,8 @@ exports.getAllActiveProducts = catchAsync(async(req, res) => {
         include: [{
                 model: Images,
                 as: "images",
-                limit: 4
+                limit: 4,
+                order:[["createdAt","ASC"]]
             },
             {
                 model: Material,
@@ -61,7 +62,7 @@ exports.getAllActiveProducts = catchAsync(async(req, res) => {
         ],
         order: [
             ['updatedAt', 'DESC'],
-            // ["images", "id", "DESC"]
+            // ["images", "createdAt", "ASC"]
         ],
     });
     const count = await Products.count({where})
@@ -71,6 +72,7 @@ exports.getOneProduct = catchAsync(async(req, res, next) => {
     const { id } = req.params
     const oneProduct = await Products.findOne({
         where: { id },
+        order:[["images","createdAt","ASC"]],
         include: [
             {
                 model: Productsizes,

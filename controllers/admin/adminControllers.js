@@ -2,7 +2,8 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const AppError = require('../../utils/appError');
 const catchAsync = require('../../utils/catchAsync');
-const { Admin, Products } = require('../../models');
+const { Admin, Products,Verification } = require('../../models');
+const randomstring=require("randomstring")
 const fs = require("fs")
 const sharp=require("sharp")
 const { Op } = require("sequelize")
@@ -20,19 +21,49 @@ const createSendToken = (admin, statusCode, res) => {
         },
     });
 };
+exports.verify_code_forgotten = catchAsync(async(req, res, next) => {
+    if (!req.body.user_checked_phone) {
+        const { user_phone } = req.body;
+        const generated_code = randomstring.generate({
+            length: 6,
+            charset: "numeric"
+        })
+        console.log(generated_code)
+        const obj = {
+            code: generated_code,
+            number: user_phone,
+            sms: 'Lybas tassyklaýyş koduňyz: ' + generated_code,
+
+        }
+        var io = req.app.get('socketio');
+        io.emit("verification-phone", obj)
+        await Verification.create({user_phone,code:generated_code})
+        res.status(200).send("Code is sent");
+    } else next();
+});
 exports.forgotPassword = catchAsync(async(req, res, next) => {
-    const admin = await Admin.findOne()
-    const new_password = generate({
-        charset: "123",
-        length: 6
-    })
-    console.log(new_password)
-    await sendPassword({ new_password })
-    await admin.update({
-        password: await bcrypt.hash(new_password, 12),
-    })
-    return res.status(200).send({ msg: "Gmail adresyna barar hazir mal blyat" })
-})
+    if (req.body.user_checked_phone) {
+        let {  password, password_confirm } = req.body;
+        if (password != password_confirm)
+            return next(
+                new AppError(
+                    'Passwords are not the same or less than 6 characters',
+                    400
+                )
+            );
+        const user = await Admin.findOne({});
+        if (!user) return next(new AppError('User not found', 404));
+
+        password = await bcrypt.hash(password, 12);
+        await user.update({ password });
+
+        createSendToken(user, 200, res);
+    } else {
+        res.send(400).json({
+            msg: 'Firstly you have to verify your number',
+        });
+    }
+});
 exports.login = catchAsync(async(req, res, next) => {
     const { username, password } = req.body;
     if (!username || !password) {
@@ -162,3 +193,26 @@ const intoArray = (file) => {
     if (file[0].length == undefined) return file
     else return file[0]
 }
+exports.checkCode=catchAsync(async(req,res,next)=>{
+    const {user_phone,code}=req.body
+    console.log(req.body)
+    const verification=await Verification.findOne({where:{user_phone,code}})
+    if(!verification) return next(new AppError("Wrong verification code",401)) 
+    // const generated_code = randomstring.generate({
+    //     length: 6,
+    //     charset: "numeric"
+    // })
+    // console.log(generated_code)
+    // const obj = {
+    //     code: generated_code,
+    //     number: user_phone,
+    //     sms: 'Taze parolynyz: ' + generated_code,
+
+    // }
+    // let password = await bcrypt.hash(generated_code, 12)
+    // const user=await Users.findOne({where:{user_phone:phone_number}})
+    // await user.update({password})
+    // var io = req.app.get('socketio');
+    // io.emit("verification-phone", obj)
+    return res.send("True")
+})

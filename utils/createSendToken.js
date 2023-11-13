@@ -16,7 +16,7 @@ exports.createSendToken = (user, statusCode, res) => {
     });
 };
 exports.createSendTokenSeller = (seller, statusCode, res) => {
-    const token = signToken(seller.user_id);
+    const token = signToken(seller.id);
     seller.password = undefined;
 
     res.status(statusCode).json({

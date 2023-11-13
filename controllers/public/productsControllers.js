@@ -19,7 +19,8 @@ exports.getProducts = catchAsync(async(req, res) => {
     let where={}
     if(req.query.filter)
         where=getWhere(JSON.parse(req.query.filter))
-    const order=getOrder(req.query)
+    let order=getOrder(req.query)
+    order.push(["images","createdAt","ASC"])
     const products = await Products.findAll({
         order,
         limit,
@@ -333,6 +334,7 @@ exports.getOneProduct = catchAsync(async(req, res, next) => {
     const id = req.params.id
     const oneProduct = await Products.findOne({
         where: { id },
+        order:[["images","createdAt","ASC"]],
         include: [
             {
                 model: Productsizes,
@@ -385,7 +387,8 @@ exports.getOneProduct = catchAsync(async(req, res, next) => {
             },
             limit: 4,
             order: [
-                ["createdAt", "DESC"]
+                ["createdAt", "DESC"],
+                ["images","createdAt","ASC"]
             ],
             include: [
                 {

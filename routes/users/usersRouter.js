@@ -8,7 +8,7 @@ const {
     verify_code_forgotten,
     checkCode,
 } = require('../../controllers/users/authController');
-const { getMyCart, addMyCart, select, updateProduct, deleteProduct, isOrdered, deleteSelected, selectAll } = require('../../controllers/users/cartControllers');
+const { addMyCart, updateProduct, deleteProduct, isOrdered} = require('../../controllers/users/cartControllers');
 const { getNotOrderedProducts, } = require('../../controllers/users/ordersControllers');
 const {
     getMe,
@@ -19,8 +19,6 @@ const {
     dislikeProduct,
     getUsersLikedProducts,
     uploadUserImage,
-    createCard,
-    getNotifications,
     subscribeToNews,
     deliverAbroad,
 } = require('../../controllers/users/usersControllers');
