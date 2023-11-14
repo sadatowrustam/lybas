@@ -21,7 +21,11 @@ module.exports = (sequelize, DataTypes) => {
         startDate:DataTypes.DATE,
         endDate:DataTypes.DATE,
         sellerId:DataTypes.UUID,
-        image: DataTypes.STRING
+        image: DataTypes.STRING,
+        isActive:{
+            type:DataTypes.BOOLEAN,
+            defaultValue:false
+        }
     }, {
         sequelize,
         tableName: "banners",

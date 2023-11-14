@@ -73,7 +73,7 @@ exports.uploadSellerImage = catchAsync(async(req, res, next) => {
 
     const image = `${req.seller.id}_seller.webp`;
     const photo = req.files[0].data
-    let buffer = await sharp(photo).webp().toBuffer()
+    let buffer = await sharp(photo).webp().resize(500,500).toBuffer()
 
     await sharp(buffer).toFile(`static/${image}`);
 

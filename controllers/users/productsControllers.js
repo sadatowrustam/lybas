@@ -18,10 +18,13 @@ const AppError = require('../../utils/appError');
 exports.getProducts = catchAsync(async(req, res) => {
     const limit = req.query.limit || 10;
     const { offset } = req.query;
-    let where={}
+    let where=[]
     if(req.query.filter)
-        where=getWhere(JSON.parse(req.query.filter))
+        where=getWhere(JSON.parse(req.query.filter),req.query.sort)
     let order=getOrder(req.query)
+    if(req.query.sort==4){
+        where.push({discount:{[Op.gt]:0}})
+    }
     order.push(["images","createdAt","ASC"])
     let products = await Products.findAll({
         order,
@@ -242,7 +245,8 @@ async function isLiked(products, req) {
     return products
 }
 
-function getWhere({ price,category,color,size,material,welayat}) { 
+function getWhere({ price,category,color,size,material,welayat},sort) { 
+    console.log(246)
     let where = []
     let min_price,max_price
     if(price){
@@ -309,7 +313,11 @@ function getWhere({ price,category,color,size,material,welayat}) {
           }
         })
     }
+    if (sort == 3) {
+        where.push({discount:{[Op.gt]:0}})
+    }
     console.log(where)
+
     return where
 }
 function getOrder({sort}){
@@ -323,9 +331,9 @@ function getOrder({sort}){
             ['price', 'ASC']
         ];
     
-    } else if (sort == 3) {
+    } else if (sort == 4) {
         order = [
-            ["sold_count", "DESC"]
+            ["discount", "DESC"]
         ]
     
     }else if(sort==2){

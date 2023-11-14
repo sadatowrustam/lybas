@@ -11,7 +11,7 @@ const router = express.Router();
 router.get("/", getProducts)
 router.get("/comments/:id",getComments)
 router.get('/search', searchProducts);
-router.get("/search-lite", searchLite)
+// router.get("/search-lite", searchLite)
 router.get("/:id", getOneProduct)
 
 module.exports = router;
