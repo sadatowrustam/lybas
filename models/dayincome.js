@@ -17,6 +17,7 @@ module.exports = (sequelize, DataTypes) => {
     income: DataTypes.REAL
   }, {
     sequelize,
+    tableName:"dayincomes",
     modelName: 'Dayincome',
   });
   return Dayincome;

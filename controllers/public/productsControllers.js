@@ -41,7 +41,7 @@ exports.getProducts = catchAsync(async(req, res) => {
                 as:"size"
             }
         },
-    ],
+        ],
         where
     });
     return res.status(200).json(products);
@@ -54,18 +54,6 @@ exports.searchProducts = catchAsync(async(req, res, next) => {
     const limit = req.query.limit || 20;
     let { keyword, offset, sort } = req.query;
     var order;
-    // if (sort == 1) {
-    //     order = [
-    //         ['price', 'DESC']
-    //     ];
-    // } else if (sort == 0) {
-    //     order = [
-    //         ['price', 'ASC']
-    //     ];
-    // } else order = [
-    //     ['updatedAt', 'DESC']
-    // ];
-
     let keywordsArray = [];
     keyword = keyword.toLowerCase();
     keywordsArray.push('%' + keyword + '%');
@@ -101,15 +89,31 @@ exports.searchProducts = catchAsync(async(req, res, next) => {
         order,
         limit,
         offset,
-        include:[
-            {
-                model:Images,
-                as:"images"
+        include: [{
+            model: Images,
+            as: "images"
+        }, 
+        {
+            model:Productsizes,
+            as:"product_sizes",
+            include:{
+                model:Sizes,
+                as:"size"
             }
-        ]
+        },
+        ],
     });
-    delete where.isActive
-
+    where = {
+        [Op.or]: [{
+                name: {
+                    [Op.like]: {
+                        [Op.any]: keywordsArray,
+                    },
+                },
+            },
+           
+        ],
+    }
     const seller = await Seller.findAll({
         where,
         order,

@@ -89,7 +89,8 @@ exports.addMyOrders = catchAsync(async(req, res, next) => {
     
         }
     }
-    
+    const io=req.app.get("socket.io")
+    io.emit("admin-order")
     return res.status(200).json({
         status: 'Your orders accepted and will be delivered as soon as possible',
         data: {

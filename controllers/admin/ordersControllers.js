@@ -1,6 +1,7 @@
 const Op = require('sequelize').Op;
 const AppError = require('../../utils/appError');
 const catchAsync = require('../../utils/catchAsync');
+const axios=require("axios")
 const {
     Productsizes,
     Products,
@@ -8,7 +9,9 @@ const {
     Orderproducts,
     Notifications,
     Material,
-
+    Users,
+    Seller,
+    Dayincome
 } = require('../../models');
 
 exports.getAllOrders = catchAsync(async(req, res, next) => {
@@ -119,6 +122,8 @@ exports.changeOrderStatus = catchAsync(async(req, res, next) => {
     }
 
     if (req.body.status == "delivered") {
+        const io=req.app.get("socketio")
+        const user=await axios.get("http://localhost:5011/users/"+order.userId)
         for (var i = 0; i < order.order_products.length; i++) {
             const product = await Products.findOne({
                 where: { id: order.order_products[i].productId },
@@ -128,6 +133,7 @@ exports.changeOrderStatus = catchAsync(async(req, res, next) => {
             await product.update({ sold_count: product.sold_count + order.order_products[i].quantity })
             await Notifications.create({productId:product.id,type:"rate",text:"You completed order of product please rate it",userId:order.userId,isRead:false})
         }
+        io.to(user.data.id).emit('notification');
     }
     await Orderproducts.update({ status: req.body.status }, { where: { orderId: order.id } })
     await order.update({
@@ -160,28 +166,112 @@ exports.deleteOrder=catchAsync(async(req, res, next) => {
     return res.send("sucess")
 });
 exports.getStats=catchAsync(async(req, res, next) =>{
+    let stats={
+        balance:{},
+        users:{},
+        seller:{},
+        orders:{},
+
+    }
     const startDate = new Date();
     startDate.setMonth(startDate.getMonth() - 1);
 
     const endDate = new Date();
-    const secondDate=endDate()
-    secondDate.setMonth(endDate.getMonth() -2 );
-    const data = await Orders.findAll({
-        where: {
-            createdAt: {
-            between: [startDate, endDate]
-            }
+    const secondDate=new Date()
+    secondDate.setMonth(secondDate.getMonth()-1)
+    let where= {
+        createdAt: {
+            [Op.gte]: startDate,
+            [Op.lte]: endDate
         }
+    }
+    let where2= {
+        createdAt: {
+            [Op.gte]: secondDate,
+            [Op.lte]: startDate
+        },
+    }
+    //total balance
+    let firstNumber = await Orders.sum("total_price",{
+        where
     });
-    const data2 = await Orders.findAll({
-        where: {
-            createdAt: {
-            between: [secondDate, startDate]
-            }
+
+    let secondNumber = await Orders.sum("total_price",{
+        where:where2
+    });
+    if (secondNumber === null) {
+        secondNumber = 0;
+    }
+    let difference=percentageDifference(firstNumber,secondNumber)    
+    stats.balance.sum=firstNumber
+    stats.balance.difference=difference
+    //users stats
+     firstNumber = await Users.count({
+        where
+    });
+
+     secondNumber = await Users.count({
+        where:where2
+    });
+    if (secondNumber === null) {
+        secondNumber = 0;
+    }
+    difference=percentageDifference(firstNumber,secondNumber)    
+    stats.users.sum=firstNumber
+    stats.users.difference=difference
+    firstNumber = await Orders.count({
+        where
+    });
+
+     secondNumber = await Orders.count({
+        where:where2
+    });
+    if (secondNumber === null) {
+        secondNumber = 0;
+    }
+    difference=percentageDifference(firstNumber,secondNumber)    
+    stats.orders.sum=firstNumber
+    stats.orders.difference=difference
+    firstNumber = await Seller.count({
+        where
+    });
+
+     secondNumber = await Seller.count({
+        where:where2
+    });
+    if (secondNumber === null) {
+        secondNumber = 0;
+    }
+    difference=percentageDifference(firstNumber,secondNumber)    
+    stats.seller.sum=firstNumber
+    stats.seller.difference=difference
+    return res.send(stats)
+})
+exports.getDailyStats=catchAsync(async(req, res, next) =>{
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 1);
+
+    const endDate = new Date();
+    let where= {
+        createdAt: {
+            [Op.gte]: startDate,
+            [Op.lte]: endDate
         }
+    }
+    const data = await Dayincome.findAll({
+        where,
+        order:[["createdAt","DESC"]],
+        attributes:["createdAt","income"]
     });
-    return res.send({data,data2})
+    return res.send(data)
 })
 const capitalize = function(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 };
+const percentageDifference=(firstNumber,secondNumber)=>{
+    let percentageDifference = ((firstNumber - secondNumber) / secondNumber) * 100;
+    if (percentageDifference === Infinity) {
+        percentageDifference = firstNumber;
+      }
+    return percentageDifference
+}

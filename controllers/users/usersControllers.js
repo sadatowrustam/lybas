@@ -141,6 +141,8 @@ exports.subscribeToNews = catchAsync(async(req, res, next) => {
     req.body.data=JSON.stringify({s:"s"})
     req.body.isRead=false
     const mail=await Mails.create(req.body)
+    const io=req.app.get("socket.io")
+    io.emit("admin-mail")
     return res.status(200).send(mail)
 })
 exports.deliverAbroad = catchAsync(async(req, res, next) => {
@@ -148,5 +150,7 @@ exports.deliverAbroad = catchAsync(async(req, res, next) => {
     req.body.data=JSON.stringify(req.body)
     req.body.isRead=false
     const mail=await Mails.create(req.body)
+    const io=req.app.get("socket.io")
+    io.emit("admin-mail")
     return res.status(200).send(mail)
 })

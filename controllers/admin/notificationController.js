@@ -53,6 +53,8 @@ exports.addNotification = catchAsync(async(req, res, next) => {
     req.body.count=await Users.count()
     req.body.type="public"
     req.body.isRead=true
+    const socket=req.app.get("socketio")
+    socket.emit("user-notification")
     const newNotification = await Notification.create(req.body);
     return res.status(201).send(newNotification);
 });

@@ -4,6 +4,7 @@ const AppError = require('../../utils/appError');
 const catchAsync = require('../../utils/catchAsync');
 const { Seller, Products, Productsizes, Categories, Images,Sellercategory } = require('../../models');
 const {Op}=require("sequelize")
+const {v4}=require("uuid")
 const capitalize = function(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 };
@@ -176,11 +177,28 @@ exports.getStats=catchAsync(async(req, res, next) =>{
     });
     return res.send({data,data2})
 })
+exports.uploadImages=catchAsync(async(req,res,next)=>{
+    req.files = Object.values(req.files)
+    req.files = intoArray(req.files)
+    for (const images of req.files) {
+        const image_id = v4()
+        var image = `${image_id}.webp`;
+        const photo = images.data
+        let buffer = await sharp(photo).webp().resize(500,500).toBuffer()
+        await sharp(buffer).toFile(`static/${image}`);
+        // await blogs.update({image})
+    }
+    return res.status(201).send(image);
+})
 exports.uploadSellerImage = catchAsync(async(req, res, next) => {
     req.files = Object.values(req.files)
     const image = `${req.seller.id}_seller.webp`;
     const photo = req.files[0].data
-    let buffer = await sharp(photo).webp().toBuffer()
+    let buffer = await sharp(photo).webp().resize(500,500).toBuffer()
     await sharp(buffer).toFile(`static/${image}`);
     return res.status(201).send(image);
 });
+const intoArray = (file) => {
+    if (file[0].length == undefined) return file
+    else return file[0]
+}

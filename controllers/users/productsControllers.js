@@ -11,7 +11,8 @@ const {
     Seller,
     Colors,
     Comments,
-    Mails
+    Mails,
+    Blogs
 } = require('../../models');
 const catchAsync = require('../../utils/catchAsync');
 const AppError = require('../../utils/appError');
@@ -176,49 +177,83 @@ exports.searchProducts = catchAsync(async(req, res, next) => {
     const limit = req.query.limit || 20;
     let { keyword, offset, sort } = req.query;
     var order;
-    if (sort == 1) {
-        order = [
-            ['price', 'DESC']
-        ];
-    } else if (sort == 0) {
-        order = [
-            ['price', 'ASC']
-        ];
-    } else order = [
-        ['updatedAt', 'DESC']
-    ];
-
     let keywordsArray = [];
     keyword = keyword.toLowerCase();
     keywordsArray.push('%' + keyword + '%');
     keyword = '%' + capitalize(keyword) + '%';
     keywordsArray.push(keyword);
-    const products = await Products.findAll({
-        where: {
-            [Op.or]: [{
-                    name_tm: {
-                        [Op.like]: {
-                            [Op.any]: keywordsArray,
-                        },
+    let where = {
+        [Op.or]: [{
+                name_tm: {
+                    [Op.like]: {
+                        [Op.any]: keywordsArray,
                     },
                 },
-                {
-                    name_ru: {
-                        [Op.like]: {
-                            [Op.any]: keywordsArray,
-                        },
+            },
+            {
+                name_ru: {
+                    [Op.like]: {
+                        [Op.any]: keywordsArray,
                     },
+                },
+            },
+            {
+                name_en: {
+                    [Op.like]: {
+                        [Op.any]: keywordsArray,
+                    },
+                },
+            },
+        ],
+    }
 
-                },
-            ],
-            isActive: true,
-        },
+    let products = await Products.findAll({
+        where,
         order,
         limit,
         offset,
+        include:[
+            {
+                model:Images,
+                as:"images"
+            }
+        ]
     });
+    delete where.isActive
 
-    return res.status(200).send({ products });
+    const seller = await Seller.findAll({
+        where,
+        order,
+        limit,
+        offset
+    })
+    where = {
+        [Op.or]: [{
+                header_tm: {
+                    [Op.like]: {
+                        [Op.any]: keywordsArray,
+                    },
+                },
+            },
+            {
+                header_ru: {
+                    [Op.like]: {
+                        [Op.any]: keywordsArray,
+                    },
+                },
+            },
+            {
+                header_en: {
+                    [Op.like]: {
+                        [Op.any]: keywordsArray,
+                    },
+                },
+            },
+        ],
+    };
+    const blogs=await Blogs.findAll({where}) 
+    products=await isLiked(products,req)
+    return res.status(200).send({ products, blogs, seller });
 });
 exports.addReminder=catchAsync(async(req,res,next)=>{
 const data=await Instock.create(req.body)
@@ -331,9 +366,9 @@ function getOrder({sort}){
             ['price', 'ASC']
         ];
     
-    } else if (sort == 4) {
+    } else if (sort == 3) {
         order = [
-            ["discount", "DESC"]
+            ["sold_count", "DESC"]
         ]
     
     }else if(sort==2){

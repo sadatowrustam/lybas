@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const { login, protect, updateMe, sendMe, getTime, changeTime,forgotPassword, uploadAdminImage,verify_code_forgotten,checkCode} = require("../../controllers/admin/adminControllers")
+const { getStats } = require('../../controllers/admin/ordersControllers')
 router.post("/login", login)
 router.post("/edit", protect, updateMe)
 router.get("/get-me", protect, sendMe)
@@ -8,6 +9,7 @@ router.get("/time", getTime)
 router.post("/time", changeTime)
 router.post("/upload-image",uploadAdminImage)
 router.post("/check-code",checkCode)
+router.get("/stats",getStats)
 router.patch('/forgot-password', verify_code_forgotten, forgotPassword);
 router.use("/banners", require("./routes/bannersRouter")) //test edildi
 router.use("/blogs",require("./routes/blogsRouter"))

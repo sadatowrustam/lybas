@@ -8,26 +8,27 @@ const dates = schedule.scheduleJob('0 19 16 * * *', async function() {
     const banner=await Banners.update({isActive:false},{where:{endDate:today}})
     const new_banners=await Banners.update({isActive:true},{where:{startDate:today}})
 });
-// const orders = schedule.scheduleJob('0 45 15 * * *', async function() {
-//     where.status="Gowshuryldy"
-//     const now = new Date();
-//     now.setHours(0);
-//     now.setMinutes(0);
-//     now.setSeconds(0);
-//     now.setMilliseconds(0);
-//     const then = new Date();
-//     then.setHours(23);
-//     then.setMinutes(59);
-//     then.setSeconds(59);
-//     then.setMilliseconds(0);
-//     where.createdAt = {
-//         [Op.gte]: then,
-//         [Op.lte]: now
-//     }
-//     let sum = await Orders.sum("total_price",{
-//         where
-// });
-//     let dayincome=await Dayincome.create({income:sum})
-//     console.log(dayincome)
-// })
+const orders = schedule.scheduleJob('0 45 15 * * *', async function() {
+    let where={}
+    const now = new Date();
+    now.setHours(0);
+    now.setMinutes(0);
+    now.setSeconds(0);
+    now.setMilliseconds(0);
+    const then = new Date();
+    then.setHours(23);
+    then.setMinutes(59);
+    then.setSeconds(59);
+    then.setMilliseconds(0);
+    where.createdAt = {
+        [Op.gte]: then,
+        [Op.lte]: now
+    }
+    where.status="onTheWay"
+    let sum = await Orders.sum("total_price",{
+        where
+});
+    let dayincome=await Dayincome.create({income:sum})
+    console.log(dayincome)
+})
 module.exports = () => { dates }
