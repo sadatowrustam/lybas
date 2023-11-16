@@ -54,8 +54,8 @@ exports.addNotification = catchAsync(async(req, res, next) => {
     req.body.type="public"
     req.body.isRead=true
     const socket=req.app.get("socketio")
-    socket.emit("user-notification")
     const newNotification = await Notification.create(req.body);
+    socket.emit("user-notification")
     return res.status(201).send(newNotification);
 });
 exports.editNotification = catchAsync(async(req, res, next) => {

@@ -9,11 +9,12 @@ exports.getAllNotifications = catchAsync(async(req,res,next)=>{
     var where = {
         [Op.or]:[{type:"public"},{userId:req.user.id}]
     };
-    const data = await Notification.findAll({where,limit,offset})
+    let order=[["createdAt","DESC"]]
+    const data = await Notification.findAll({where,limit,offset,order})
     const count=await Notification.count({where:{userId:req.user.id,isRead:false}})
     return res.send({data,count})
 })
 exports.isRead=catchAsync(async(req,res,next)=>{
     await Notification.update({isRead:true},{where:{userId:req.user.id}})
     return res.status(200).send("Success")
-})
+}) 

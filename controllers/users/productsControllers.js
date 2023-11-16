@@ -16,6 +16,7 @@ const {
 } = require('../../models');
 const catchAsync = require('../../utils/catchAsync');
 const AppError = require('../../utils/appError');
+const axios=require("axios")
 exports.getProducts = catchAsync(async(req, res) => {
     const limit = req.query.limit || 10;
     const { offset } = req.query;
@@ -260,11 +261,13 @@ const data=await Instock.create(req.body)
     let obj={}
     obj.sellerId=req.body.sellerId
     obj.type="outStock"
+    const user=await axios.get("http://localhost:5011/seller/"+req.body.sellerId)
     const productsize=await Productsizes.findOne({where:{id:req.body.productsizeId}})
     obj.data=JSON.stringify({size:req.body.size,link:"http://192.168.57.2:3010/dresses/"+productsize.productId})
     obj.mail=req.body.mail
     obj.isRead=false
-    console.log(obj)
+    const socket=req.app.get("socketio")
+    socket.emit("seller-notification")
     const mail=await Mails.create(obj)
     return res.status(200).send(data)
 })

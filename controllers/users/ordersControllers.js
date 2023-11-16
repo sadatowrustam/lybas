@@ -2,7 +2,7 @@ const AppError = require('../../utils/appError');
 const catchAsync = require('../../utils/catchAsync');
 const { Products, Orders, Orderproducts, Productsizes, Sizes, Material, Seller,Images } = require('../../models');
 const { Op } = require("sequelize")
-exports.addMyOrders = catchAsync(async(req, res, next) => {
+exports. addMyOrders = catchAsync(async(req, res, next) => {
     var {
         address,
         note,
@@ -71,6 +71,10 @@ exports.addMyOrders = catchAsync(async(req, res, next) => {
             sellerId:new_array[i].sellerId
         });
         orders_array.push(order)
+        const seller=await axios.get("http://localhost:5011/seller/"+req.body.sellerId)
+        const io=req.app.get("socketio")
+        io.to(user.data.socketId).emit('seller-notification');
+
         for (var x = 0; x < new_array[i].order_products.length; x++) {
             await Orderproducts.update({
                 orderId: order.id,
@@ -89,7 +93,7 @@ exports.addMyOrders = catchAsync(async(req, res, next) => {
     
         }
     }
-    const io=req.app.get("socket.io")
+    const io=req.app.get("socketio")
     io.emit("admin-order")
     return res.status(200).json({
         status: 'Your orders accepted and will be delivered as soon as possible',
@@ -133,13 +137,15 @@ exports.addInstantOrder=catchAsync(async(req,res,next)=>{
         userId: req.user.id,
         total_price:orderProductData.total_price,
         address,
-        user_name: name+surname,
+        user_name: name+" "+surname,
         user_phone,
         note,
         status: "waiting",
         total_quantity:orderProductData.quantity,
     });
     orderProductData.orderId=order.id
+    const io=req.app.get("socketio")
+    io.emit("admin-order")
     await order_product.update(orderProductData)
     return res.status(201).send(order_product)
 })

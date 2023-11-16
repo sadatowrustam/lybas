@@ -7,7 +7,7 @@ const {
     Products,
     Orders,
     Orderproducts,
-    Notifications,
+    Notification,
     Material,
     Users,
     Seller,
@@ -78,9 +78,9 @@ exports.getAllOrders = catchAsync(async(req, res, next) => {
             }]
             }
     });
-    const count = await Orders.count({ where }
-)
-    return res.status(201).send({ data, count });
+    const count = await Orders.count({ where })
+    const notRead=await Orders.count({where:{isRead:false}})
+    return res.status(201).send({ data, count,notRead });
 });
 exports. getOrderProducts = catchAsync(async(req, res, next) => {
     const order = await Orders.findOne({
@@ -120,20 +120,20 @@ exports.changeOrderStatus = catchAsync(async(req, res, next) => {
     if (!order) {
         return next(new AppError('Order did not found with that ID', 404));
     }
-
-    if (req.body.status == "delivered") {
+    if (req.body.status == "onTheWay") {
         const io=req.app.get("socketio")
         const user=await axios.get("http://localhost:5011/users/"+order.userId)
         for (var i = 0; i < order.order_products.length; i++) {
             const product = await Products.findOne({
                 where: { id: order.order_products[i].productId },
             });
-            const product_size = await Productsizes.findOne({where:{id:order.order_products[i].id}})
-            await product_size.update({stock:product_size.stock-order.order_products.quantity})
+            const product_size = await Productsizes.findOne({where:{id:order.order_products[i].productsizeId}})
+            console.log(i,product_size.stock,order.order_products[i].quantity)
+            await product_size.update({stock:product_size.stock-order.order_products[i].quantity})
             await product.update({ sold_count: product.sold_count + order.order_products[i].quantity })
-            await Notifications.create({productId:product.id,type:"rate",text:"You completed order of product please rate it",userId:order.userId,isRead:false})
+            await Notification.create({productId:product.id,type:"rate",text:"You completed order of product please rate it",userId:order.userId,isRead:false,name:"order"})
         }
-        io.to(user.data.id).emit('notification');
+        io.to(user.data.socketId).emit('user-notification');
     }
     await Orderproducts.update({ status: req.body.status }, { where: { orderId: order.id } })
     await order.update({
@@ -264,6 +264,18 @@ exports.getDailyStats=catchAsync(async(req, res, next) =>{
         attributes:["createdAt","income"]
     });
     return res.send(data)
+})
+exports.isRead=catchAsync(async(req,res,next)=>{
+    const unreadOrders=await Orders.findAll({
+        where: {
+          isRead: false,
+        }
+      });
+      for (const order of unreadOrders) {
+        order.isRead = true;
+        await order.save();
+      }
+    return res.send("Sucess")
 })
 const capitalize = function(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);

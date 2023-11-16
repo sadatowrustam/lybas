@@ -56,6 +56,10 @@ module.exports = (sequelize, DataTypes) => {
                 },
             },
         },
+        isRead:{
+            type:DataTypes.BOOLEAN,
+            defaultValue:true
+        },
         status: DataTypes.STRING,
         note: DataTypes.TEXT
     }, {
