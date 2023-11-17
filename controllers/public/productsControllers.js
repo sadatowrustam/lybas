@@ -224,9 +224,11 @@ exports.getOneProduct = catchAsync(async(req, res, next) => {
             
         
     })
+    const count=await Products.count({where:{sellerId:oneProduct.sellerId}})
     const product = {
         oneProduct,
-        recommendations
+        recommendations,
+        count
     }
     return res.send({ data:product })
 })
