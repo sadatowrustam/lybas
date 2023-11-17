@@ -17,7 +17,9 @@ const {
     Users,
     Colors,
     Comments,
+    Instock
 } = require('../../models');
+const { default: axios } = require('axios');
 const capitalize = function(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 };
@@ -121,21 +123,34 @@ exports.addSize = catchAsync(async(req, res, next) => {
     const product = await Products.findOne({ where: { id: req.params.id } })
     await Productsizes.destroy({ where: { productId: product.id } })
     if (!product) return next(new AppError("Product with that id not found", 404))
-    console.log(req.body.sizes)
     for (let i = 0; i < req.body.sizes.length; i++) {
         let data = {}
         data.price_old = null;
-        if (req.body.sizes[i].discount > 0) {
-            data.discount = req.body.sizes[i].discount
-            data.price_old = req.body.sizes[i].price
-            req.body.sizes[i].price = (data.price_old / 100) * (100 - req.body.sizes[i].discount)
-        }
-        data.price = req.body.sizes[i].price
+        // if (req.body.sizes[i].discount > 0) {
+        //     data.discount = req.body.sizes[i].discount
+        //     data.price_old = req.body.sizes[i].price
+        //     req.body.sizes[i].price = (data.price_old / 100) * (100 - req.body.sizes[i].discount)
+        // }
+        // data.price = req.body.sizes[i].price
         data.sizeId = req.body.sizes[i].sizeId
         data.discount=req.body.sizes[i].discount
         data.productId = product.id
         data.stock = req.body.sizes[i].stock
-        console.log(data)
+        const instock=await Instock.findAll({where:{productId:product.id,sizeId:req.body.sizes[i].sizeId}})
+        let mails=[]
+        for(let i=0;i<instock.length;i++){
+            mails.push(instock[i].email)
+        }
+        let mail_data={
+            text:"Siziň soran "+product.name_tm+" atly harydyňyz ýenede elimizde bar",
+            mails,
+            subject:"Instock reminder"
+        }
+        try {
+            const response=await axios.post("http://localhost:5012/send-mail",mail_data)
+        } catch (error) {
+            console.log(error)
+        }
         let product_size = await Productsizes.create(data)
         sizeIds.push(data.sizeId)
         sizes.push(product_size)

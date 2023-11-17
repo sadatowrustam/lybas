@@ -6,10 +6,12 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon server.js",
-    "server": "json-server --watch db.json --port 5011"
+    "json-server": "json-server --watch db.json --port 5011"
   },
   "nodemonConfig": {
-    "ignore": ["*.json"]
+    "ignore": [
+      "*.json"
+    ]
   },
   "keywords": [],
   "author": "",
@@ -24,6 +26,7 @@
     "express-fileupload": "^1.4.2",
     "express-rate-limit": "^6.11.2",
     "helmet": "^7.0.0",
+    "json-server": "^0.17.4",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "node-schedule": "^2.1.1",
@@ -37,6 +40,7 @@
     "sharp": "^0.32.6",
     "simple-swizzle": "^0.2.2",
     "socket.io": "^4.7.2",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "yarn": "^1.22.21"
   }
 }

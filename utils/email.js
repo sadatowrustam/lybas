@@ -18,6 +18,3 @@ exports.sendEmail = async(options) => {
     };
     await transporter.sendMail(mailOptions);
 };
-// 792132719064 - vq0mdu7vvc7739lnvnnbs6dvc5hvn0an.apps.googleusercontent.com
-// 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
-// uvtujsdspbtqhydv

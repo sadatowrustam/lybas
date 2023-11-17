@@ -12,7 +12,7 @@ const {
     Colors,
     Comments,
     Mails,
-    Blogs
+    Blogs,
 } = require('../../models');
 const catchAsync = require('../../utils/catchAsync');
 const AppError = require('../../utils/appError');
@@ -221,7 +221,17 @@ exports.searchProducts = catchAsync(async(req, res, next) => {
         ]
     });
     delete where.isActive
-
+    where = {
+        [Op.or]: [{
+                name: {
+                    [Op.like]: {
+                        [Op.any]: keywordsArray,
+                    },
+                },
+            },
+           
+        ],
+    }
     const seller = await Seller.findAll({
         where,
         order,
@@ -257,17 +267,17 @@ exports.searchProducts = catchAsync(async(req, res, next) => {
     return res.status(200).send({ products, blogs, seller });
 });
 exports.addReminder=catchAsync(async(req,res,next)=>{
-const data=await Instock.create(req.body)
     let obj={}
     obj.sellerId=req.body.sellerId
     obj.type="outStock"
-    const user=await axios.get("http://localhost:5011/seller/"+req.body.sellerId)
+    // const user=await axios.get("http://localhost:5011/seller/"+req.body.sellerId)
     const productsize=await Productsizes.findOne({where:{id:req.body.productsizeId}})
     obj.data=JSON.stringify({size:req.body.size,link:"http://192.168.57.2:3010/dresses/"+productsize.productId})
     obj.mail=req.body.mail
     obj.isRead=false
     const socket=req.app.get("socketio")
     socket.emit("seller-notification")
+    const instock=await Instock.create({sizeId:productsize.sizeId,email:req.body.mail,productId:req.body.productId})
     const mail=await Mails.create(obj)
     return res.status(200).send(data)
 })

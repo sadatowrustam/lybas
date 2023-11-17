@@ -157,3 +157,97 @@ exports.deleteOrderProduct = catchAsync(async(req, res, next) => {
 
     return res.status(200).json({ msg: 'Successfully Deleted' });
 });
+exports.getStats=catchAsync(async(req, res, next) =>{
+    let stats={
+        balance:{},
+        users:{},
+        seller:{},
+        orders:{},
+
+    }
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 1);
+
+    const endDate = new Date();
+    const secondDate=new Date()
+    secondDate.setMonth(secondDate.getMonth()-1)
+    let where= {
+        createdAt: {
+            [Op.gte]: startDate,
+            [Op.lte]: endDate
+        }
+    }
+    let where2= {
+        createdAt: {
+            [Op.gte]: secondDate,
+            [Op.lte]: startDate
+        },
+    }
+    where.sellerId=req.seller.id
+    where2.sellerId=req.seller.id
+    //total balance
+    let firstNumber = await Orders.sum("total_price",{
+        where
+    });
+
+    let secondNumber = await Orders.sum("total_price",{
+        where:where2
+    });
+    if (secondNumber === null) {
+        secondNumber = 0;
+    }
+    let difference=percentageDifference(firstNumber,secondNumber)    
+    stats.balance.sum=firstNumber
+    stats.balance.difference=difference
+    //orders count
+    firstNumber = await Orders.count({
+        where
+    });
+
+     secondNumber = await Orders.count({
+        where:where2
+    });
+    if (secondNumber === null) {
+        secondNumber = 0;
+    }
+    difference=percentageDifference(firstNumber,secondNumber)    
+    stats.orders.sum=firstNumber
+    stats.orders.difference=difference
+    delete where.sellerId
+    //seller stats
+    firstNumber = await Seller.count({
+        where
+    });
+
+     secondNumber = await Seller.count({
+        where:where2
+    });
+    if (secondNumber === null) {
+        secondNumber = 0;
+    }
+    difference=percentageDifference(firstNumber,secondNumber)    
+    stats.seller.sum=firstNumber
+    stats.seller.difference=difference
+    //users stats
+    firstNumber = await Users.count({
+        where
+    });
+
+        secondNumber = await Users.count({
+        where:where2
+    });
+    if (secondNumber === null) {
+        secondNumber = 0;
+    }
+    difference=percentageDifference(firstNumber,secondNumber)    
+    stats.users.sum=firstNumber
+    stats.users.difference=difference
+    return res.send(stats)
+})
+const percentageDifference=(firstNumber,secondNumber)=>{
+    let percentageDifference = ((firstNumber - secondNumber) / secondNumber) * 100;
+    if (percentageDifference === Infinity) {
+        percentageDifference = firstNumber;
+      }
+    return percentageDifference
+}

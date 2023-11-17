@@ -1,7 +1,8 @@
 const AppError = require('../../utils/appError');
 const catchAsync = require('../../utils/catchAsync');
 const {Op}=require('sequelize')
-const { Notification,Users } = require('../../models');
+const axios=require("axios")
+const { Notification,Users,Newsletter } = require('../../models');
 const capitalize = function(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 };
@@ -55,6 +56,21 @@ exports.addNotification = catchAsync(async(req, res, next) => {
     req.body.isRead=true
     const socket=req.app.get("socketio")
     const newNotification = await Notification.create(req.body);
+   const newsletter=await Newsletter.findAll()
+    let mails=[]
+    for(let i=0;i<newsletter.length;i++){
+        mails.push(newsletter[i].mail)
+    }
+    let mail_data={
+        text:req.body.text,
+        mails,
+        subject:"News from lybas"
+    }
+    try {
+        const response=await axios.post("http://localhost:5012/send-mail",mail_data)
+    } catch (error) {
+        console.log(error)
+    }
     socket.emit("user-notification")
     return res.status(201).send(newNotification);
 });
