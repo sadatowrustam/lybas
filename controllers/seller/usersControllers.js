@@ -46,11 +46,12 @@ exports.updateMyPassword = catchAsync(async(req, res, next) => {
 });
 
 exports.updateMe = catchAsync(async(req, res, next) => {
-    const { name, welayat,email,phone_number } = req.body;
+    console.log(req.body)
+    const { username, welayat,email,phone_number } = req.body;
     const seller = await Seller.findOne({ where: { id: [req.seller.id] } });
     let isActive = false
     await seller.update({
-        name,
+        name:username,
         isActive,
         welayat,
         email,

@@ -64,6 +64,7 @@ exports.protect = catchAsync(async(req, res, next) => {
 });
 exports. forgotPassword = catchAsync(async(req, res, next) => {
     if (req.body.user_checked_phone) {
+        console.log(req.body)
         let { user_checked_phone, password, password_confirm } = req.body;
         if (password != password_confirm) return next(new AppError('Passwords are not the same', 400));
         const seller = await Seller.findOne({

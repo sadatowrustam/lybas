@@ -71,6 +71,14 @@ module.exports = {
             sellerId: {
                 type: DataTypes.UUID
             },
+            isRead:{
+                type:DataTypes.BOOLEAN,
+                defaultValue:false
+            },
+            sellerRead:{
+                type:DataTypes.BOOLEAN,
+                defaultValue:false
+            },
             createdAt: {
                 allowNull: false,
                 type: DataTypes.DATE

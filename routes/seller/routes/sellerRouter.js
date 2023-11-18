@@ -22,5 +22,5 @@
  router.patch('/edit', protect, updateMe);
  router.delete('/delete-me', protect, deleteMe);
  router.patch('/password', protect, updateMyPassword);
- router.post("/upload-image/", protect, uploadSellerImage);
+ router.post("/upload-image", protect, uploadSellerImage);
  module.exports = router;

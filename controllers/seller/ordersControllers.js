@@ -75,9 +75,9 @@ exports.getAllOrders = catchAsync(async(req, res, next) => {
             }]
             }
     });
-    const count = await Orders.count({ where }
-)
-    return res.status(201).send({ data, count });
+    const count = await Orders.count({ where })
+    const notRead=await Orders.count({where:{sellerId:req.seller.id,sellerRead:false}})
+    return res.status(201).send({ data, count,notRead });
 });
 exports. getOrderProducts = catchAsync(async(req, res, next) => {
     const order = await Orders.findOne({
@@ -243,6 +243,20 @@ exports.getStats=catchAsync(async(req, res, next) =>{
     stats.users.sum=firstNumber
     stats.users.difference=difference
     return res.send(stats)
+})
+exports.isRead=catchAsync(async(req,res,next)=>{
+    const unreadOrders=await Orders.findAll({
+        where: {
+            sellerRead:false,
+            sellerId:req.seller.id
+        }
+      });
+      console.log(unreadOrders)
+      for (const order of unreadOrders) {
+        order.sellerRead = true;
+        await order.save();
+      }
+    return res.send("Sucess")
 })
 const percentageDifference=(firstNumber,secondNumber)=>{
     let percentageDifference = ((firstNumber - secondNumber) / secondNumber) * 100;

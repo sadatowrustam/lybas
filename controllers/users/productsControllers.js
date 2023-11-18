@@ -270,16 +270,18 @@ exports.addReminder=catchAsync(async(req,res,next)=>{
     let obj={}
     obj.sellerId=req.body.sellerId
     obj.type="outStock"
-    // const user=await axios.get("http://localhost:5011/seller/"+req.body.sellerId)
+    const user=await axios.get("http://localhost:5011/seller/"+req.body.sellerId)
     const productsize=await Productsizes.findOne({where:{id:req.body.productsizeId}})
     obj.data=JSON.stringify({size:req.body.size,link:"http://192.168.57.2:3010/dresses/"+productsize.productId})
     obj.mail=req.body.mail
     obj.isRead=false
+    obj.sellerRead=false
     const socket=req.app.get("socketio")
-    socket.emit("seller-notification")
-    const instock=await Instock.create({sizeId:productsize.sizeId,email:req.body.mail,productId:req.body.productId})
+    socket.to(user.data.socketId).emit("seller-notification")
+    socket.emit("admin-mail")
+    const instock=await Instock.create({sizeId:productsize.sizeId,email:req.body.mail,productId:productsize.productId})
     const mail=await Mails.create(obj)
-    return res.status(200).send(data)
+    return res.status(200).send(mail)
 })
 async function isLiked(products, req) {
     for (let i = 0; i < products.length; i++) {

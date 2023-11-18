@@ -2,6 +2,7 @@ const AppError = require('../../utils/appError');
 const catchAsync = require('../../utils/catchAsync');
 const { Products, Orders, Orderproducts, Productsizes, Sizes, Material, Seller,Images } = require('../../models');
 const { Op } = require("sequelize")
+const axios=require("axios")
 exports. addMyOrders = catchAsync(async(req, res, next) => {
     var {
         address,
@@ -68,12 +69,17 @@ exports. addMyOrders = catchAsync(async(req, res, next) => {
             status: "waiting",
             total_quantity,
             address,
-            sellerId:new_array[i].sellerId
+            sellerId:new_array[i].sellerId,
+            isRead:false,
+            sellerRead:false
         });
         orders_array.push(order)
-        const seller=await axios.get("http://localhost:5011/seller/"+req.body.sellerId)
+        const seller=await axios.get("http://localhost:5011/seller/"+product.sellerId)
         const io=req.app.get("socketio")
-        io.to(user.data.socketId).emit('seller-notification');
+        let count=await Orders.count({where:{sellerRead:false,sellerId:product.sellerId}})
+        io.to(seller.data.socketId).emit('seller-order',count);
+        count=await Orders.count({where:{isRead:false}})
+        io.emit("admin-order",count)
 
         for (var x = 0; x < new_array[i].order_products.length; x++) {
             await Orderproducts.update({
@@ -93,8 +99,6 @@ exports. addMyOrders = catchAsync(async(req, res, next) => {
     
         }
     }
-    const io=req.app.get("socketio")
-    io.emit("admin-order")
     return res.status(200).json({
         status: 'Your orders accepted and will be delivered as soon as possible',
         data: {
@@ -135,6 +139,7 @@ exports.addInstantOrder=catchAsync(async(req,res,next)=>{
     orderProductData.isOrdered = true
     const order = await Orders.create({
         userId: req.user.id,
+        sellerId:product.sellerId,
         total_price:orderProductData.total_price,
         address,
         user_name: name+" "+surname,
@@ -142,10 +147,16 @@ exports.addInstantOrder=catchAsync(async(req,res,next)=>{
         note,
         status: "waiting",
         total_quantity:orderProductData.quantity,
+        isRead:false,
+        sellerRead:false
     });
     orderProductData.orderId=order.id
+    const seller=await axios.get("http://localhost:5011/seller/"+product.sellerId)
     const io=req.app.get("socketio")
-    io.emit("admin-order")
+    let count=await Orders.count({where:{sellerRead:false,sellerId:product.sellerId}})
+    io.to(seller.data.socketId).emit('seller-order',count);
+    count=await Orders.count({where:{isRead:false}})
+    io.emit("admin-order",count)
     await order_product.update(orderProductData)
     return res.status(201).send(order_product)
 })

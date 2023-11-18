@@ -26,6 +26,7 @@ module.exports = (sequelize, DataTypes) => {
     name:DataTypes.STRING,
     welayat: DataTypes.STRING,
     isRead:DataTypes.BOOLEAN,
+    sellerRead:DataTypes.BOOLEAN,
     sellerId:{
       type:DataTypes.UUID
     },

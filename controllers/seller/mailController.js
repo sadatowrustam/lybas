@@ -55,7 +55,8 @@ exports.getAllMails = catchAsync(async(req, res, next) => {
         offset,
         order:[["createdAt","DESC"]]
     })
-    const notRead=await Mails.count({where:{isRead:false}})
+    const notRead=await Mails.count({where:{sellerRead:false,sellerId:req.seller.id}})
+    console.log(59,notRead)
     return res.send({data,count,notRead})
 })
 exports.getMail=catchAsync(async(req,res,next)=>{
@@ -64,13 +65,15 @@ exports.getMail=catchAsync(async(req,res,next)=>{
 })
 
 exports.isRead=catchAsync(async(req,res,next)=>{
+    console.log(68)
     const unreadMails=await Mails.findAll({
         where: {
-          isRead: false,
+          sellerRead: false,
+          sellerId:req.seller.id
         }
       });
       for (const mail of unreadMails) {
-        mail.isRead = true;
+        mail.sellerRead = true;
         await mail.save();
       }
     return res.send("Sucess")

@@ -7,11 +7,13 @@ const {
     deleteOrder,
     getStats,
     getDailyStats,
+    isRead
 } = require('../../../controllers/admin/ordersControllers');
 
 const router = express.Router();
 
 router.get('/', getAllOrders);
+router.get("/isRead",isRead)
 // router.get("/stats",getStats)
 router.get("/daily",getDailyStats)
 router.delete('/order-products/delete/:id', deleteOrderProduct);

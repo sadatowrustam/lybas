@@ -30,7 +30,7 @@ module.exports = (io) => {
             try {
                 var data=await axios.get("http://localhost:5011/seller/"+id)
             } catch (error) {
-                console.log(error)
+                console.log("error")
             }
             if(!data){
                 var res=await axios.post("http://localhost:5011/seller",{id,socketId:socket.id})

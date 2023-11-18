@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const AppError = require('../../utils/appError');
 const catchAsync = require('../../utils/catchAsync');
 const { Seller, Products, Productsizes, Categories, Images,Sellercategory } = require('../../models');
+const fs=require("fs")
 const {Op}=require("sequelize")
 const {v4}=require("uuid")
 const capitalize = function(string) {
@@ -143,10 +144,6 @@ exports.deleteSeller = catchAsync(async(req, res, next) => {
                 if (err) throw err;
             })
             await image.destroy()
-        }
-        const stocks = await Stock.findAll({ where: { productId: [product.id] } });
-        for (const stock of stocks) {
-            await stock.destroy()
         }
         await product.destroy();
     }
