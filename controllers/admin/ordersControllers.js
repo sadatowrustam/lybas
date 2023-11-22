@@ -120,9 +120,14 @@ exports.changeOrderStatus = catchAsync(async(req, res, next) => {
     if (!order) {
         return next(new AppError('Order did not found with that ID', 404));
     }
+    const io=req.app.get("socketio")
+    const user=await axios.get("http://localhost:5011/users/"+order.userId)
+    if(req.body.status=="accepted"){
+        io.to(user.data.socketId).emit('user-notification');
+        const cut=order.id.slice(0,8)
+        await Notification.create({type:"accepted",text:"#"+cut,userId:order.userId,isRead:false,name:"accepted",link:"http://localhost:3000/orders"})
+    }
     if (req.body.status == "onTheWay") {
-        const io=req.app.get("socketio")
-        const user=await axios.get("http://localhost:5011/users/"+order.userId)
         for (var i = 0; i < order.order_products.length; i++) {
             const product = await Products.findOne({
                 where: { id: order.order_products[i].productId },
@@ -131,7 +136,7 @@ exports.changeOrderStatus = catchAsync(async(req, res, next) => {
             console.log(i,product_size.stock,order.order_products[i].quantity)
             await product_size.update({stock:product_size.stock-order.order_products[i].quantity})
             await product.update({ sold_count: product.sold_count + order.order_products[i].quantity })
-            await Notification.create({productId:product.id,type:"rate",text:"You completed order of product please rate it",userId:order.userId,isRead:false,name:"order"})
+            await Notification.create({productId:product.id,type:"rate",text:"You completed order of product please rate it",userId:order.userId,isRead:false,name:"order",link:"http://localhost:3000/orders"})
         }
         io.to(user.data.socketId).emit('user-notification');
     }

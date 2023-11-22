@@ -1,7 +1,7 @@
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { Users,Verification } = require('../../models');
+const { Users,Verification,Notification } = require('../../models');
 const { createSendToken } = require('./../../utils/createSendToken');
 const catchAsync = require('../../utils/catchAsync');
 const AppError = require('../../utils/appError');
@@ -113,6 +113,7 @@ exports.signup = catchAsync(async(req, res, next) => {
             password,
         });
         await verification.destroy()
+        const notif=await Notification.create({userId:newUser.id,link:"http://localhost:3000/profile",text:"This is text",type:"register"})
         createSendToken(newUser, 201, res);
     } else {
         res.send(400).json({

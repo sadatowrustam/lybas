@@ -141,7 +141,6 @@ exports.addSize = catchAsync(async(req, res, next) => {
         for(let i=0;i<instock.length;i++){
             mails.push(instock[i].email)
         }
-        console.log(144,instock.length)
         if(instock.length>0){
             let mail_data={
                 text:"Siziň soran "+product.name_tm+" atly harydyňyz ýenede elimizde bar",
@@ -150,6 +149,8 @@ exports.addSize = catchAsync(async(req, res, next) => {
             }
             try {
                 const response=await axios.post("http://localhost:5012/send-mail",mail_data)
+                await Instock.destroy({where:{productId:product.id,sizeId:req.body.sizes[i].sizeId}})
+                console.log(154)
             } catch (error) {
                 console.log(error)
             }

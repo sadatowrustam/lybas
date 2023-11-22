@@ -27,6 +27,9 @@ module.exports = {
       isRead:{
         type:DataTypes.BOOLEAN,
       },
+      link:{
+        type:DataTypes.STRING
+      },
       createdAt: {
         allowNull: false,
         type: DataTypes.DATE

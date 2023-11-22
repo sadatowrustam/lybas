@@ -23,6 +23,7 @@ module.exports = (sequelize, DataTypes) => {
     isRead:{
       type:DataTypes.BOOLEAN,
     },
+    link:DataTypes.STRING
   }, {
     sequelize,
     tableName:"notifications",

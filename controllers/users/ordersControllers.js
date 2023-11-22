@@ -1,6 +1,6 @@
 const AppError = require('../../utils/appError');
 const catchAsync = require('../../utils/catchAsync');
-const { Products, Orders, Orderproducts, Productsizes, Sizes, Material, Seller,Images } = require('../../models');
+const { Products, Orders, Orderproducts, Productsizes, Sizes, Material, Seller,Images,Notification } = require('../../models');
 const { Op } = require("sequelize")
 const axios=require("axios")
 exports. addMyOrders = catchAsync(async(req, res, next) => {
@@ -74,12 +74,15 @@ exports. addMyOrders = catchAsync(async(req, res, next) => {
             sellerRead:false
         });
         orders_array.push(order)
+        const user=await axios.get("http://localhost:5011/users/"+order.userId)
         const seller=await axios.get("http://localhost:5011/seller/"+product.sellerId)
         const io=req.app.get("socketio")
+        io.to(user.data.socketId).emit('user-notification');
         let count=await Orders.count({where:{sellerRead:false,sellerId:product.sellerId}})
         io.to(seller.data.socketId).emit('seller-order',count);
         count=await Orders.count({where:{isRead:false}})
         io.emit("admin-order",count)
+
 
         for (var x = 0; x < new_array[i].order_products.length; x++) {
             await Orderproducts.update({
@@ -98,6 +101,8 @@ exports. addMyOrders = catchAsync(async(req, res, next) => {
         
     
         }
+        const cut=order.id.slice(0,8)
+        const notif=await Notification.create({userId:req.user.id,text:"#"+cut,type:"waiting"})
     }
     return res.status(200).json({
         status: 'Your orders accepted and will be delivered as soon as possible',
@@ -151,13 +156,17 @@ exports.addInstantOrder=catchAsync(async(req,res,next)=>{
         sellerRead:false
     });
     orderProductData.orderId=order.id
+    const user=await axios.get("http://localhost:5011/users/"+order.userId)
     const seller=await axios.get("http://localhost:5011/seller/"+product.sellerId)
     const io=req.app.get("socketio")
+    io.to(user.data.socketId).emit('user-notification');
     let count=await Orders.count({where:{sellerRead:false,sellerId:product.sellerId}})
     io.to(seller.data.socketId).emit('seller-order',count);
     count=await Orders.count({where:{isRead:false}})
     io.emit("admin-order",count)
     await order_product.update(orderProductData)
+    const cut=order.id.slice(0,8)
+    const notif=await Notification.create({userId:req.user.id,text:"#"+cut,type:"waiting"})
     return res.status(201).send(order_product)
 })
 exports.getMyOrders=catchAsync(async(req,res,next)=>{

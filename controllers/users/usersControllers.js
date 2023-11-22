@@ -1,7 +1,7 @@
 const bcrypt = require("bcryptjs");
 const AppError = require('../../utils/appError');
 const catchAsync = require('../../utils/catchAsync');
-const { Users, Products, Images, Likedproducts,Productsizes,Sizes,Notification,Mails } = require('../../models');
+const { Users, Products, Images, Likedproducts,Productsizes,Sizes,Notification,Mails,Newsletter } = require('../../models');
 const { createSendToken } = require('./../../utils/createSendToken');
 const { Op } = require("sequelize")
 const sharp = require("sharp")
@@ -141,6 +141,8 @@ exports.subscribeToNews = catchAsync(async(req, res, next) => {
     req.body.data=JSON.stringify({s:"s"})
     req.body.isRead=false
     const mail=await Mails.create(req.body)
+    const newsletter=await Newsletter.create({mail:req.body.mail})
+    console.log(newsletter)
     const io=req.app.get("socketio")
     io.emit("admin-mail")
     return res.status(200).send(mail)
