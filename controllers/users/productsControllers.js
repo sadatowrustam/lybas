@@ -103,7 +103,11 @@ exports.getOneProduct = catchAsync(async(req, res, next) => {
                 id: {
                     [Op.ne]: oneProduct.id
                 },
-                sellerId:oneProduct.sellerId
+                [Op.or]: [
+                    { materialId: { [Op.eq]: oneProduct.materialId } },
+                    { sellerId: { [Op.eq]: oneProduct.sellerId } },
+                    { categoryId: { [Op.eq]: oneProduct.categoryId } }
+                ]
             },
             limit: 4,
             order: [
@@ -366,6 +370,7 @@ function getWhere({ price,category,color,size,material,welayat},sort) {
     if (sort == 3) {
         where.push({discount:{[Op.gt]:0}})
     }
+    where.push({isActive:true})
     console.log(where)
 
     return where

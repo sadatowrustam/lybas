@@ -1,4 +1,7 @@
 const { Banners,Orders,Dayincome } = require("../models")
+const moment = require('moment-timezone');
+
+
 const { Op } = require("sequelize")
 const schedule = require("node-schedule")
 const fs = require("fs")
@@ -8,26 +11,18 @@ const dates = schedule.scheduleJob('0 19 16 * * *', async function() {
     const banner=await Banners.update({isActive:false},{where:{endDate:today}})
     const new_banners=await Banners.update({isActive:true},{where:{startDate:today}})
 });
-const orders = schedule.scheduleJob('0 45 15 * * *', async function() {
+const orders = schedule.scheduleJob('20 14 12 * * *', async function() {
     let where={}
     const now = new Date();
-    now.setHours(0);
-    now.setMinutes(0);
-    now.setSeconds(0);
-    now.setMilliseconds(0);
-    const then = new Date();
-    then.setHours(23);
-    then.setMinutes(59);
-    then.setSeconds(59);
-    then.setMilliseconds(0);
+    now.setHours(0,0,0,0)
+    // Create a moment object representing the current date and time in GMT+5
     where.createdAt = {
-        [Op.gte]: then,
-        [Op.lte]: now
+        [Op.gte]: now,
     }
     where.status="onTheWay"
     let sum = await Orders.sum("total_price",{
-        where
-});
+        where,
+    });
     let dayincome=await Dayincome.create({income:sum})
     console.log(dayincome)
 })

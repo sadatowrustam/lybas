@@ -265,7 +265,7 @@ exports.getDailyStats=catchAsync(async(req, res, next) =>{
     }
     const data = await Dayincome.findAll({
         where,
-        order:[["createdAt","DESC"]],
+        order:[["createdAt","ASC"]],
         attributes:["createdAt","income"]
     });
     return res.send(data)

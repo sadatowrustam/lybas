@@ -160,8 +160,6 @@ exports.deleteOrderProduct = catchAsync(async(req, res, next) => {
 exports.getStats=catchAsync(async(req, res, next) =>{
     let stats={
         balance:{},
-        users:{},
-        seller:{},
         orders:{},
 
     }
@@ -213,37 +211,40 @@ exports.getStats=catchAsync(async(req, res, next) =>{
     difference=percentageDifference(firstNumber,secondNumber)    
     stats.orders.sum=firstNumber
     stats.orders.difference=difference
-    delete where.sellerId
-    //seller stats
-    firstNumber = await Seller.count({
-        where
-    });
-
-     secondNumber = await Seller.count({
-        where:where2
-    });
-    if (secondNumber === null) {
-        secondNumber = 0;
-    }
-    difference=percentageDifference(firstNumber,secondNumber)    
-    stats.seller.sum=firstNumber
-    stats.seller.difference=difference
-    //users stats
-    firstNumber = await Users.count({
-        where
-    });
-
-        secondNumber = await Users.count({
-        where:where2
-    });
-    if (secondNumber === null) {
-        secondNumber = 0;
-    }
-    difference=percentageDifference(firstNumber,secondNumber)    
-    stats.users.sum=firstNumber
-    stats.users.difference=difference
     return res.send(stats)
 })
+exports.getDailyStats=catchAsync(async(req,res,next)=>{
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 1);
+
+    const endDate = new Date();
+    let where= {
+        createdAt: {
+            [Op.gte]: startDate,
+            [Op.lte]: endDate
+        }
+    }
+    const data = await Orders.findAll({
+        where,
+        order:[["createdAt","ASC"]],
+    });
+    let income=[]
+    for (let i=0;i<data.length;i++) {        
+        let filtered=data.filter((object) => (object.createdAt.getMonth() === data[0].createdAt.getMonth()&& object.createdAt.getDate() === data[0].createdAt.getDate()));
+        income.push(getSum(filtered))
+        data.splice(0,filtered.length)
+        if(data.length==0) break
+        i=0
+    }
+    return res.send(income)
+})
+const getSum=(array)=>{
+    let sum=0
+    for (let i=0;i<array.length;i++){
+        sum+=array[i].total_price
+    }
+    return sum
+}
 exports.isRead=catchAsync(async(req,res,next)=>{
     const unreadOrders=await Orders.findAll({
         where: {

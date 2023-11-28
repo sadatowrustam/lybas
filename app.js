@@ -21,10 +21,14 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }))
 app.use(express.static(`${__dirname}/static`));
 app.use(fileupload())
-app.use('/users', require('./routes/users/usersRouter'));
-app.use('/admin', require('./routes/admin/adminRouter'));
-app.use('/public', require('./routes/public/publicRouter'));
-app.use("/seller", require("./routes/seller/sellerRouter"))
+app.use('/api/users', require('./routes/users/usersRouter'));
+app.use('/api/chief', require('./routes/admin/adminRouter'));
+app.use('/api/public', require('./routes/public/publicRouter'));
+app.use("/api/seller", require("./routes/seller/sellerRouter"))
+app.get("/api/:image",(req,res)=>{
+    console.log("men barder")
+    res.sendFile(req.params.image,{root:"./static"})
+})
 app.all('*', (req, res, next) => {
     next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));
 });
