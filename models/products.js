@@ -117,6 +117,9 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             defaultValue: 0
         },
+        recommended:{
+            type:DataTypes.BOOLEAN
+        },
         sold_count: {
             type: DataTypes.INTEGER,
             defaultValue: 0

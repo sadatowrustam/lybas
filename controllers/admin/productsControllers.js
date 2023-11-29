@@ -63,7 +63,7 @@ exports.getAllActiveProducts = catchAsync(async(req, res) => {
             }
         ],
         order: [
-            ['updatedAt', 'DESC'],
+            ['createdAt', 'DESC'],
             // ["images", "createdAt", "ASC"]
         ],
     });
@@ -205,12 +205,24 @@ exports.editProductStatus = catchAsync(async(req, res, next) => {
 
     await product.update({
         isActive: req.body.isActive,
-        edit:false
     });
 
     return res.status(200).send(product);
 });
+exports.editProductRecommendation = catchAsync(async(req, res, next) => {
+    console.log(216,req.body)
+    const product = await Products.findOne({
+        where: { id: req.body.id },
+    });
+    if (!product)
+        return next(new AppError('Product did not found with that ID', 404));
 
+    await product.update({
+        recommended: req.body.recommended,
+    });
+
+    return res.status(200).send(product);
+});
 exports.deleteProduct = catchAsync(async(req, res, next) => {
     const id = req.params.id;
     const product = await Products.findOne({

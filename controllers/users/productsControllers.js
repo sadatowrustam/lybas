@@ -27,6 +27,10 @@ exports.getProducts = catchAsync(async(req, res) => {
     if(req.query.sort==4){
         where.push({discount:{[Op.gt]:0}})
     }
+    if(req.query.sort==3){
+        where.push({recommended:true})
+    }
+    where.push({isActive:true})
     order.push(["images","createdAt","ASC"])
     let products = await Products.findAll({
         order,
@@ -370,6 +374,9 @@ function getWhere({ price,category,color,size,material,welayat},sort) {
     if (sort == 3) {
         where.push({discount:{[Op.gt]:0}})
     }
+    if (sort == 4) {
+        where.push({recommended:true})
+    }
     where.push({isActive:true})
     console.log(where)
 
@@ -385,11 +392,6 @@ function getOrder({sort}){
         order = [
             ['price', 'ASC']
         ];
-    
-    } else if (sort == 3) {
-        order = [
-            ["sold_count", "DESC"]
-        ]
     
     }else if(sort==2){
         order=[["likeCount","DESC"]]

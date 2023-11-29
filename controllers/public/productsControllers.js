@@ -18,12 +18,15 @@ exports.getProducts = catchAsync(async(req, res) => {
     const { offset } = req.query;
     let where=[]
     if(req.query.filter)
-        where=getWhere(JSON.parse(req.query.filter))
+        where=getWhere(JSON.parse(req.query.filter),req.query.sort)
     let order=getOrder(req.query)
     if(req.query.sort==4){
         where.push({discount:{[Op.gt]:0}})
     }
-    console.log(where)
+    if(req.query.sort==3){
+        where.push({recommended:true})
+    }
+    where.push({isActive:true})
     order.push(["images","createdAt","ASC"])
     const products = await Products.findAll({
         order,
@@ -248,25 +251,25 @@ function getWhere({ price,category,color,size,material,welayat},sort) {
         let price = {
             [Op.lte]: max_price
         }
-
+        
         where.push({ price })
     } else if (max_price == "" && min_price) {
         let price = {
             [Op.gte]: min_price
         }
         where.push({ price })
-
+        
     } else if (max_price && min_price) {
         let price = {
             [Op.and]: [{
-                    price: {
-                        [Op.gte]: min_price
-                    }
-                },
-                {
-                    price: {
-                        [Op.lte]: max_price
-                    }
+                price: {
+                    [Op.gte]: min_price
+                }
+            },
+            {
+                price: {
+                    [Op.lte]: max_price
+                }
                 }
             ],
         }
@@ -283,31 +286,34 @@ function getWhere({ price,category,color,size,material,welayat},sort) {
     if(category&&category.length!=0){
         where.push({categoryId: {
             [Op.in]: category
-          }
-        })
-    }
-    if(color&&color.length!=0){
+        }
+    })
+}
+if(color&&color.length!=0){
         where.push({colorId: {
             [Op.in]: color
-          }
-        })
+        }
+    })
+}
+if(material&&material.length!=0){
+    where.push({materialId: {
+        [Op.in]: material
     }
-    if(material&&material.length!=0){
-        where.push({materialId: {
-            [Op.in]: material
-          }
-        })
+})
+}
+if(welayat&&welayat.length!=0){
+    where.push({welayat: {
+        [Op.contains]: welayat
     }
-    if(welayat&&welayat.length!=0){
-        where.push({welayat: {
-            [Op.contains]: welayat
-          }
-        })
-    }
-    console.log(where)
-    where.push({isActive:true})
-
-    return where
+})
+}
+if (sort == 4) {
+    where.push({discount:{[Op.gt]:0}})
+}
+if (sort == 3) {
+    where.push({recommended:true})
+}
+return where
 }
 function getOrder({sort}){
     let order=[]
@@ -319,11 +325,6 @@ function getOrder({sort}){
         order = [
             ['price', 'ASC']
         ];
-    
-    } else if (sort == 3) {
-        order = [
-            ["sold_count", "DESC"]
-        ]
     
     }else if(sort==2){
         order=[["likeCount","DESC"]]

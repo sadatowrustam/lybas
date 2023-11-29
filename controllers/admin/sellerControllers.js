@@ -23,12 +23,16 @@ exports.addSeller = catchAsync(async(req, res, next) => {
 })
 exports.isActive = catchAsync(async(req, res, next) => {
     let { isActive, id } = req.body
-    console.log(req.body)
     let seller = await Seller.findOne({ where: { id } })
     if (!seller) {
         return next(new AppError("There is no seller with this id", 404))
     }
     await seller.update({ isActive })
+    if(isActive==false){
+        await Products.update({isActive:false},{where:{sellerId:id0}})
+    }else if(isActive==true){
+        await Products.update({isActive:true},{where:{sellerId:id,edited:false}})
+    }
     return res.send(seller)
 })
 exports.allSellers = catchAsync(async(req, res, next) => {
