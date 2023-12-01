@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const AppError = require('../../utils/appError');
 const catchAsync = require('../../utils/catchAsync');
 const { Seller, Products, Productsizes, Categories, Images,Sellercategory } = require('../../models');
+const sharp=require("sharp")
 const fs=require("fs")
 const {Op}=require("sequelize")
 const {v4}=require("uuid")
