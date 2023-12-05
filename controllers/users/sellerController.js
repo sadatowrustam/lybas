@@ -4,12 +4,11 @@ const {
     Images,
     Seller,
     Productsizes,
-    Sizes
+    Sizes,
+    Categories
 } = require('../../models');
 const catchAsync = require('../../utils/catchAsync');
 const AppError = require('../../utils/appError');
-
-
 exports.getAll = catchAsync(async(req, res, next) => {
     const limit = req.query.limit || 20;
     let { keyword, offset, sort } = req.query;
@@ -32,13 +31,13 @@ exports.getAll = catchAsync(async(req, res, next) => {
 exports.sellerProduct = catchAsync(async(req, res, next) => {
     let id = req.params.id
     let where=[]
-    if(req.query.filter)
-        where=getWhere(JSON.parse(req.query.filter),req.query.sort)
+    if(req.query.sort)
+        where=getWhere(JSON.parse(req.query.sort),req.query.sortBy)
     let order=getOrder(req.query)
-    if(req.query.sort==4){
+    if(req.query.sortBy==4){
         where.push({discount:{[Op.gt]:0}})
     }
-    if(req.query.sort==3){
+    if(req.query.sortBy==3){
         where.push({recommended:true})
     }
     where.push({isActive:true})
@@ -69,7 +68,7 @@ exports.sellerProduct = catchAsync(async(req, res, next) => {
 const capitalize = function(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 };
-function getWhere({ price,category,color,size,material,welayat},sort) { 
+function getWhere({ price,category,color,size,material,welayat}) { 
     let where = []
     let min_price,max_price
     if(price){
@@ -80,25 +79,25 @@ function getWhere({ price,category,color,size,material,welayat},sort) {
         let price = {
             [Op.lte]: max_price
         }
-        
+
         where.push({ price })
     } else if (max_price == "" && min_price) {
         let price = {
             [Op.gte]: min_price
         }
         where.push({ price })
-        
+
     } else if (max_price && min_price) {
         let price = {
             [Op.and]: [{
-                price: {
-                    [Op.gte]: min_price
-                }
-            },
-            {
-                price: {
-                    [Op.lte]: max_price
-                }
+                    price: {
+                        [Op.gte]: min_price
+                    }
+                },
+                {
+                    price: {
+                        [Op.lte]: max_price
+                    }
                 }
             ],
         }
@@ -115,49 +114,43 @@ function getWhere({ price,category,color,size,material,welayat},sort) {
     if(category&&category.length!=0){
         where.push({categoryId: {
             [Op.in]: category
-        }
-    })
-}
+          }
+        })
+    }
     if(color&&color.length!=0){
-            where.push({colorId: {
-                [Op.in]: color
-            }
+        where.push({colorId: {
+            [Op.in]: color
+          }
         })
     }
     if(material&&material.length!=0){
         where.push({materialId: {
             [Op.in]: material
-        }
-    })
+          }
+        })
     }
     if(welayat&&welayat.length!=0){
         where.push({welayat: {
-            [Op.contains]: welayat
-        }
-    })
-    }
-    if (sort == 4) {
-        where.push({discount:{[Op.gt]:0}})
-    }
-    if (sort == 3) {
-        where.push({recommended:true})
+            [Op.in]: welayat
+          }
+        })
     }
     return where
 }
-function getOrder({sort}){
+function getOrder({sortBy}){
     let order=[]
-    if (sort == 1) {
+    if (sortBy == 1) {
         order = [
             ['price', 'DESC']
         ];
-    } else if (sort == 0) {
+    } else if (sortBy == 0) {
         order = [
             ['price', 'ASC']
         ];
     
-    }else if(sort==2){
+    }else if(sortBy==2){
         order=[["likeCount","DESC"]]
-    }else if(sort==4){
+    }else if(sortBy==4){
         order=[["discount","DESC"]]
     }
     else order = [
