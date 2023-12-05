@@ -121,17 +121,11 @@ exports.addSize = catchAsync(async(req, res, next) => {
     var sizes = []
     var sizeIds=[]
     const product = await Products.findOne({ where: { id: req.params.id } })
-    await Productsizes.destroy({ where: { productId: product.id } })
+    // await Productsizes.destroy({ where: { productId: product.id } })
     if (!product) return next(new AppError("Product with that id not found", 404))
     for (let i = 0; i < req.body.sizes.length; i++) {
         let data = {}
         data.price_old = null;
-        // if (req.body.sizes[i].discount > 0) {
-        //     data.discount = req.body.sizes[i].discount
-        //     data.price_old = req.body.sizes[i].price
-        //     req.body.sizes[i].price = (data.price_old / 100) * (100 - req.body.sizes[i].discount)
-        // }
-        // data.price = req.body.sizes[i].price
         data.sizeId = req.body.sizes[i].sizeId
         data.discount=req.body.sizes[i].discount
         data.productId = product.id
@@ -155,9 +149,21 @@ exports.addSize = catchAsync(async(req, res, next) => {
                 console.log(error)
             }
         }
-        let product_size = await Productsizes.create(data)
+        let existingRecord = await Productsizes.findOne({
+            where: {
+              sizeId: req.body.sizes[i].sizeId,
+              productId: req.params.id,
+            },
+          });
+        
+          if (existingRecord) {
+            // Update the existing record
+            await existingRecord.update(data );
+          } else {
+            existingRecord=await Productsizes.create(data);
+          }
         sizeIds.push(data.sizeId)
-        sizes.push(product_size)
+        sizes.push(existingRecord)
     }
     await product.update({sizeIds})
 
