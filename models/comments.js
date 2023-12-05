@@ -24,6 +24,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     userId: DataTypes.UUID,
     productId:DataTypes.UUID,
+    sellerId:DataTypes.UUID,
     rate:DataTypes.INTEGER,
     deletedBy: DataTypes.STRING,
     name:{
