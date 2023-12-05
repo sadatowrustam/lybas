@@ -63,10 +63,10 @@ exports.getAllComments = catchAsync(async(req, res, next) => {
                 model:Users,
                 as:"user"
             },
-                {
-                    model:Images,
-                    as:"images"
-                }
+            {
+                model:Images,
+                as:"images"
+            }
             ] 
         })
     const count=await Comments.count({where})

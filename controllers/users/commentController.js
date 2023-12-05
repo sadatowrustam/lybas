@@ -8,11 +8,11 @@ exports.addMyComment = catchAsync(async(req, res, next) => {
     req.body.userId = req.user.id
     const address=await Address.findAll({where:{userId:req.user.id},limit:1,order:[["createdAt","DESC"]]})
     req.body.welayat=address.welayat
-    let comment = await Comments.create(req.body)
     const orderproducts=await Orderproducts.findOne({where:{id:req.body.orderproductId}})
+    req.body.sellerId=orderproducts.sellerId
+    let comment = await Comments.create(req.body)
     await orderproducts.update({isCommented:true})
     const product=await Products.findOne({id:orderproducts.productId})
-    console.log(req.body)
     const bigRating=(product.rating*product.rating_count)+req.body.rate
     const average=bigRating/(product.rating_count+1)
     await product.update({rating:average,rating_count:product.rating_count+1})

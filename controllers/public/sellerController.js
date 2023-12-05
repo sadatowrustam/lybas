@@ -39,8 +39,17 @@ exports.getAll = catchAsync(async(req, res, next) => {
 exports.sellerProduct = catchAsync(async(req, res, next) => {
     let id = req.params.id
     let where=[]
-    if(req.query.sort)
-        where=getWhere(JSON.parse(req.query.sort))
+    if(req.query.filter)
+        where=getWhere(JSON.parse(req.query.filter),req.query.sort)
+    let order=getOrder(req.query)
+    if(req.query.sort==4){
+        where.push({discount:{[Op.gt]:0}})
+    }
+    if(req.query.sort==3){
+        where.push({recommended:true})
+    }
+    where.push({isActive:true})
+    order.push(["images","createdAt","ASC"])
     where.push({sellerId:id})
     const seller = await Seller.findOne({ where: { id },include:{model:Categories,as:"category"} })
     if (!seller) {
@@ -84,7 +93,7 @@ exports.sellerProductNew = catchAsync(async(req, res, next) => {
 const capitalize = function(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
-function getWhere({ price,category,color,size,material,welayat}) { 
+function getWhere({ price,category,color,size,material,welayat},sort) { 
     let where = []
     let min_price,max_price
     if(price){
@@ -95,25 +104,25 @@ function getWhere({ price,category,color,size,material,welayat}) {
         let price = {
             [Op.lte]: max_price
         }
-
+        
         where.push({ price })
     } else if (max_price == "" && min_price) {
         let price = {
             [Op.gte]: min_price
         }
         where.push({ price })
-
+        
     } else if (max_price && min_price) {
         let price = {
             [Op.and]: [{
-                    price: {
-                        [Op.gte]: min_price
-                    }
-                },
-                {
-                    price: {
-                        [Op.lte]: max_price
-                    }
+                price: {
+                    [Op.gte]: min_price
+                }
+            },
+            {
+                price: {
+                    [Op.lte]: max_price
+                }
                 }
             ],
         }
@@ -130,26 +139,53 @@ function getWhere({ price,category,color,size,material,welayat}) {
     if(category&&category.length!=0){
         where.push({categoryId: {
             [Op.in]: category
-          }
-        })
-    }
+        }
+    })
+}
     if(color&&color.length!=0){
-        where.push({colorId: {
-            [Op.in]: color
-          }
+            where.push({colorId: {
+                [Op.in]: color
+            }
         })
     }
     if(material&&material.length!=0){
         where.push({materialId: {
             [Op.in]: material
-          }
-        })
+        }
+    })
     }
     if(welayat&&welayat.length!=0){
         where.push({welayat: {
-            [Op.in]: welayat
-          }
-        })
+            [Op.contains]: welayat
+        }
+    })
+    }
+    if (sort == 4) {
+        where.push({discount:{[Op.gt]:0}})
+    }
+    if (sort == 3) {
+        where.push({recommended:true})
     }
     return where
+}
+function getOrder({sort}){
+    let order=[]
+    if (sort == 1) {
+        order = [
+            ['price', 'DESC']
+        ];
+    } else if (sort == 0) {
+        order = [
+            ['price', 'ASC']
+        ];
+    
+    }else if(sort==2){
+        order=[["likeCount","DESC"]]
+    }else if(sort==4){
+        order=[["discount","DESC"]]
+    }
+    else order = [
+        ['createdAt', 'DESC']
+    ];
+    return order
 }

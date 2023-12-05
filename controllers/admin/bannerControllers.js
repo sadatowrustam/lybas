@@ -6,7 +6,11 @@ const {v4}=require("uuid")
 const { Banners, Products } = require('../../models');
 
 exports.addBanner = catchAsync(async(req, res, next) => {
+    const newDate=new Date()
     req.body.startDate=new Date(req.body.startDate)
+    if(newDate.getMonth()==req.body.startDate.getMonth() && newDate.getDate()>=req.body.startDate.getDate()){
+        req.body.isActive=true
+    }
     req.body.endDate=new Date(req.body.endDate)
     const newBanner = await Banners.create(req.body);
     return res.status(201).send(newBanner);
@@ -15,6 +19,9 @@ exports.editBanner = catchAsync(async(req, res, next) => {
     const updateBanner = await Banners.findOne({where:{ id: req.params.id }})
     if (!updateBanner)
         return next(new AppError("Banner with that id not found"), 404)
+    if(newDate.getMonth()==req.body.startDate.getMonth() && newDate.getDate()>=req.body.startDate.getDate()){
+        req.body.isActive=true
+    }
     await updateBanner.update(req.body)
     return res.status(200).send(updateBanner)
 })
