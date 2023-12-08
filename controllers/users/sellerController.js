@@ -5,7 +5,8 @@ const {
     Seller,
     Productsizes,
     Sizes,
-    Categories
+    Categories,
+    Likedproducts
 } = require('../../models');
 const catchAsync = require('../../utils/catchAsync');
 const AppError = require('../../utils/appError');
@@ -159,13 +160,13 @@ function getOrder({sortBy}){
     return order
 }
 async function isLiked(products, req) {
-    for (let i = 0; i < products.length; i++) {
+    for (let i = 0; i < products.rows.length; i++) {
         const liked_ids = await Likedproducts.findOne({
             where: {
-                userId: req.user.id , productId: products[i].id
+                userId: req.user.id , productId: products.rows[i].id
             }
         })
-        if (liked_ids) products[i].isLiked = true
+        if (liked_ids) products.rows[i].isLiked = true
     }
     return products
 }

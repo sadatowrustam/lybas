@@ -16,10 +16,11 @@ const AppError = require('../../utils/appError');
 exports.getProducts = catchAsync(async(req, res) => {
     const limit = req.query.limit || 10;
     const { offset } = req.query;
+    let order=[]
     let where=[]
     if(req.query.filter)
         where=getWhere(JSON.parse(req.query.filter),req.query.sort)
-    let order=getOrder(req.query)
+    order=getOrder(req.query)
     if(req.query.sort==4){
         where.push({discount:{[Op.gt]:0}})
     }

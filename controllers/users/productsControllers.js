@@ -21,9 +21,10 @@ exports.getProducts = catchAsync(async(req, res) => {
     const limit = req.query.limit || 10;
     const { offset } = req.query;
     let where=[]
+    let order=[]
     if(req.query.filter)
         where=getWhere(JSON.parse(req.query.filter),req.query.sort)
-    let order=getOrder(req.query)
+    order=getOrder(req.query)
     if(req.query.sort==4){
         where.push({discount:{[Op.gt]:0}})
     }
@@ -154,6 +155,7 @@ exports.getComments = catchAsync(async(req, res, next) => {
         where: { id },       
     })
     const comments=await Comments.findAll({
+        where:{productId:id,isActive:true},
         include:[{
             model:Users,
             as:"user"
@@ -166,15 +168,14 @@ exports.getComments = catchAsync(async(req, res, next) => {
         order:[["createdAt","DESC"]]
     })
     const ratings=[]
-    const count=await Comments.count({where:{productId:oneProduct.id}})
+    const count=await Comments.count({where:{productId:oneProduct.id,isActive:true}})
     for (let i=1;i<6;i++){
         const rating=await Comments.count({where:{productId:oneProduct.id,rate:i}})
         console.log(count,rating)
         let percentageDifference=(rating * 100) / count;
         percentageDifference=isFinite(percentageDifference) ? percentageDifference : 0
         console.log(percentageDifference)
-        ratings.push(percentageDifference)
-          
+        ratings.push(percentageDifference)      
     }
     return res.send({ product:oneProduct,count,comments,ratings })
 })
