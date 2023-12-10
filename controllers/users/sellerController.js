@@ -69,7 +69,7 @@ exports.sellerProduct = catchAsync(async(req, res, next) => {
 const capitalize = function(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 };
-function getWhere({ price,category,color,size,material,welayat}) { 
+function getWhere({ price,category,color,size,material,welayat},sort) { 
     let where = []
     let min_price,max_price
     if(price){
@@ -135,6 +135,12 @@ function getWhere({ price,category,color,size,material,welayat}) {
             [Op.in]: welayat
           }
         })
+    }
+    if (sort == 4) {
+        where.push({discount:{[Op.gt]:0}})
+    }
+    if (sort == 3) {
+        where.push({recommended:true})
     }
     return where
 }

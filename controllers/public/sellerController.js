@@ -160,6 +160,12 @@ function getWhere({ price,category,color,size,material,welayat}) {
           }
         })
     }
+    if (sort == 4) {
+        where.push({discount:{[Op.gt]:0}})
+    }
+    if (sort == 3) {
+        where.push({recommended:true})
+    }
     return where
 }
 function getOrder({sortBy}){

@@ -305,7 +305,6 @@ async function isLiked(products, req) {
 }
 
 function getWhere({ price,category,color,size,material,welayat},sort) { 
-    console.log(246)
     let where = []
     let min_price,max_price
     if(price){
@@ -368,14 +367,14 @@ function getWhere({ price,category,color,size,material,welayat},sort) {
     }
     if(welayat&&welayat.length!=0){
         where.push({welayat: {
-            [Op.contains]: welayat
+            [Op.in]: welayat
           }
         })
     }
-    if (sort == 3) {
+    if (sort == 4) {
         where.push({discount:{[Op.gt]:0}})
     }
-    if (sort == 4) {
+    if (sort == 3) {
         where.push({recommended:true})
     }
     where.push({isActive:true})

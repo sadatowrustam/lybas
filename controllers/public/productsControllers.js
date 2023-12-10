@@ -304,7 +304,7 @@ if(material&&material.length!=0){
 }
 if(welayat&&welayat.length!=0){
     where.push({welayat: {
-        [Op.contains]: welayat
+        [Op.in]: welayat
     }
 })
 }
