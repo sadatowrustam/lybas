@@ -3,7 +3,7 @@ var cors = require('cors');
 const AppError = require('./utils/appError');
 const fileupload = require("express-fileupload")
 const app = express();
-
+const timeout=require("connect-timeout")
 // app.use(require('helmet')())
 const limiter = require('express-rate-limit')({
     max: 1000,
@@ -29,6 +29,7 @@ app.get("/api/:image",(req,res)=>{
     console.log("men barder")
     res.sendFile(req.params.image,{root:"./static"})
 })
+app.use(timeout("120s"))
 app.all('*', (req, res, next) => {
     next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));
 });

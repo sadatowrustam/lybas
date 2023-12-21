@@ -288,7 +288,8 @@ exports.getNotOrderedProducts = catchAsync(async(req, res, next) => {
             body_en,
             body_tm,
             body_ru,
-            material
+            material,
+            stock
         } = product;
         if (order_products[i].productsizeId != null) {
             var product_size = await Productsizes.findOne({ where: { id: order_products[i].productsizeId },include:{model:Sizes,as:"size"} })
@@ -312,6 +313,7 @@ exports.getNotOrderedProducts = catchAsync(async(req, res, next) => {
             obj.price = product.price
             obj.price_old = product.price_old
             obj.total_price = product.price * order_products[i].quantity
+            obj.stock=product_size.stock
         } else if (product) {
             obj.price = product.price
             obj.price_old = product.price_old
