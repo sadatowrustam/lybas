@@ -29,7 +29,7 @@ exports.getProducts = catchAsync(async(req, res) => {
     }
     where.push({isActive:true})
     order.push(["images","createdAt","ASC"])
-    order.push(["createdAt","DESC"])
+    order.push(["updatedAt","DESC"])
     const products = await Products.findAll({
         order,
         limit,

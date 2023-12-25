@@ -11,7 +11,7 @@ exports.getAllNotifications = catchAsync(async(req,res,next)=>{
     };
     let order=[["createdAt","DESC"]]
     const data = await Notification.findAll({where,limit,offset,order})
-    const count=await Notification.count({where:{userId:req.user.id,isRead:false}})
+    const count=await Notification.count({where})
     return res.send({data,count})
 })
 exports.isRead=catchAsync(async(req,res,next)=>{

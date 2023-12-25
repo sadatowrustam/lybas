@@ -33,6 +33,7 @@ exports.getProducts = catchAsync(async(req, res) => {
     }
     where.push({isActive:true})
     order.push(["images","createdAt","ASC"])
+    order.push(["updatedAt","DESC"])
     let products = await Products.findAll({
         order,
         limit,

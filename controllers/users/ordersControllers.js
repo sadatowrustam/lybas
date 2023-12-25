@@ -41,6 +41,7 @@ exports. addMyOrders = catchAsync(async(req, res, next) => {
             var product = await Products.findOne({
                 where: { id: new_array[i].order_products[j].productId },
             });
+            
             if (product_size) {
                 console.log("ine men")
                 if (product_size.stock < new_array[i].order_products[j].quantity) {
@@ -289,7 +290,6 @@ exports.getNotOrderedProducts = catchAsync(async(req, res, next) => {
             body_tm,
             body_ru,
             material,
-            stock
         } = product;
         if (order_products[i].productsizeId != null) {
             var product_size = await Productsizes.findOne({ where: { id: order_products[i].productsizeId },include:{model:Sizes,as:"size"} })
